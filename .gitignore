@@ -1,0 +1,43 @@
+# ─── Node / Next.js ──────────────────────────────────
+node_modules/
+.next/
+out/
+dist/
+.env
+.env.local
+.env.*.local
+
+# ─── Python / FastAPI ────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+backend/venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# ─── Database ────────────────────────────────────────
+*.db
+*.sqlite
+
+# ─── OS ──────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── IDEs ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Misc ────────────────────────────────────────────
+*.log
+coverage/
+.coverage
+
+# ─── Claude Code (interno) ───────────────────────────
+memory/
+.claude/
