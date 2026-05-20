@@ -366,74 +366,7 @@ class QuestionStat(SQLModel, table=True):
 
 
 # ─────────────────────────────────────────────────────────────────
-# 19. community_posts
-# ─────────────────────────────────────────────────────────────────
-class CommunityPost(SQLModel, table=True):
-    __tablename__ = "community_posts"
-
-    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    category: str | None = Field(default=None, max_length=100, index=True)
-    title: str = Field(max_length=255)
-    content: str = Field(sa_column=Column(Text, nullable=False))
-    image_url: str | None = Field(default=None)
-    view_count: int = Field(default=0)
-    reply_count: int = Field(default=0)
-    helpful_count: int = Field(default=0)
-    status: str = Field(default="published", max_length=50, index=True)
-    created_at: datetime = Field(default_factory=utcnow, index=True)
-    updated_at: datetime = Field(default_factory=utcnow)
-    deleted_at: datetime | None = Field(default=None)
-
-
-# ─────────────────────────────────────────────────────────────────
-# 20. community_replies
-# ─────────────────────────────────────────────────────────────────
-class CommunityReply(SQLModel, table=True):
-    __tablename__ = "community_replies"
-
-    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
-    post_id: uuid.UUID = Field(foreign_key="community_posts.id", index=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    parent_reply_id: uuid.UUID | None = Field(default=None, foreign_key="community_replies.id")
-    content: str = Field(sa_column=Column(Text, nullable=False))
-    is_solution: bool = Field(default=False, index=True)
-    is_teacher_reply: bool = Field(default=False)
-    helpful_count: int = Field(default=0)
-    status: str = Field(default="published", max_length=50)
-    created_at: datetime = Field(default_factory=utcnow)
-    updated_at: datetime = Field(default_factory=utcnow)
-    deleted_at: datetime | None = Field(default=None)
-
-
-# ─────────────────────────────────────────────────────────────────
-# 21. mentoring_sessions
-# ─────────────────────────────────────────────────────────────────
-class MentoringSession(SQLModel, table=True):
-    __tablename__ = "mentoring_sessions"
-
-    id: uuid.UUID = Field(default_factory=uuid_pk, primary_key=True)
-    student_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    teacher_id: uuid.UUID = Field(foreign_key="users.id", index=True)
-    scheduled_at: datetime = Field(index=True)
-    topic: str | None = Field(default=None, max_length=255)
-    status: str = Field(default="scheduled", max_length=50)  # scheduled | started | completed | cancelled
-    start_time: datetime | None = Field(default=None)
-    end_time: datetime | None = Field(default=None)
-    duration_minutes: int | None = Field(default=None)
-    video_url: str | None = Field(default=None)
-    recording_url: str | None = Field(default=None)
-    feedback: str | None = Field(default=None, sa_column=Column(Text))
-    student_rating: int | None = Field(default=None)
-    student_feedback: str | None = Field(default=None, sa_column=Column(Text))
-    price: Decimal | None = Field(default=None, decimal_places=2, max_digits=8)
-    payment_status: str | None = Field(default=None, max_length=50)  # pending | paid | refunded
-    created_at: datetime = Field(default_factory=utcnow)
-    updated_at: datetime = Field(default_factory=utcnow)
-
-
-# ─────────────────────────────────────────────────────────────────
-# 22. user_badges  (M:N junction)
+# 19. user_badges  (M:N junction)
 # ─────────────────────────────────────────────────────────────────
 class UserBadge(SQLModel, table=True):
     __tablename__ = "user_badges"

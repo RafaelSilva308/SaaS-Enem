@@ -5,11 +5,13 @@ import { AnimatePresence, motion } from "framer-motion"
 import {
   AlertCircle, BookOpen, Calendar, CheckCircle, ChevronDown,
   ChevronRight, Loader2, RefreshCw, Settings2, SlidersHorizontal,
-  Sparkles,
+  Sparkles, Zap,
 } from "lucide-react"
 import { toast } from "sonner"
 
 import { api } from "@/lib/api"
+import { ContingencyModal } from "@/components/study-plan/ContingencyModal"
+import { TurboSessionSheet } from "@/components/study-plan/TurboSessionSheet"
 import { TopicCard } from "@/components/study-plan/TopicCard"
 import { ProgressRing } from "@/components/study-plan/ProgressRing"
 import { Button } from "@/components/ui/button"
@@ -334,12 +336,27 @@ function AdjustPanel({ plan, onAdjusted }: { plan: StudyPlan; onAdjusted: () => 
   )
 }
 
+interface ContingencyStatus {
+  delay_detected: boolean; severity: string; days_behind: number
+  hours_behind: number; delay_percent: number; health_score: number
+  weakest_subject: string | null
+}
+
+const HEALTH_CONFIG = (score: number) => {
+  if (score >= 80) return { label: "No prazo", color: "#10b981", dot: "bg-emerald-500" }
+  if (score >= 50) return { label: "Leve atraso", color: "#f59e0b", dot: "bg-amber-500" }
+  return { label: "Atraso crítico", color: "#ef4444", dot: "bg-red-500" }
+}
+
 // ── Main Page ──────────────────────────────────────────────────────
 export default function PlanoPage() {
   const [plan, setPlan] = useState<StudyPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
   const [activeView, setActiveView] = useState("sprint")
+  const [contingency, setContingency] = useState<ContingencyStatus | null>(null)
+  const [contingencyModalOpen, setContingencyModalOpen] = useState(false)
+  const [turboOpen, setTurboOpen] = useState(false)
 
   const fetchPlan = useCallback(async () => {
     setLoading(true)
@@ -354,7 +371,12 @@ export default function PlanoPage() {
     }
   }, [])
 
-  useEffect(() => { fetchPlan() }, [fetchPlan])
+  useEffect(() => {
+    fetchPlan()
+    api.get("/contingency/status")
+      .then(({ data }) => setContingency(data))
+      .catch(() => { /* plano pode não existir ainda */ })
+  }, [fetchPlan])
 
   async function handleGenerate() {
     setGenerating(true)
@@ -401,16 +423,51 @@ export default function PlanoPage() {
 
   const enem = new Date(plan.enem_date + "T00:00:00")
   const daysLeft = Math.ceil((enem.getTime() - Date.now()) / 86400000)
+  const health = contingency ? HEALTH_CONFIG(contingency.health_score) : null
+
+  async function handleContingencyConfirm() {
+    await api.post("/contingency/regenerate")
+    setContingencyModalOpen(false)
+    setContingency(prev => prev ? { ...prev, delay_detected: false, severity: "ok", health_score: 80 } : prev)
+    fetchPlan()
+    toast.success("Plano de contingência ativado!")
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+      {/* Modais */}
+      {contingency && (
+        <ContingencyModal
+          open={contingencyModalOpen}
+          status={contingency}
+          onClose={() => setContingencyModalOpen(false)}
+          onConfirm={handleContingencyConfirm}
+        />
+      )}
+      <TurboSessionSheet
+        open={turboOpen}
+        subject={contingency?.weakest_subject ?? undefined}
+        onClose={() => setTurboOpen(false)}
+      />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">Plano de Estudos</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {daysLeft} dias para o ENEM · {plan.weeks_remaining} semanas restantes
-          </p>
+          <div className="flex items-center gap-3 mt-0.5">
+            <p className="text-muted-foreground text-sm">
+              {daysLeft} dias para o ENEM · {plan.weeks_remaining} semanas restantes
+            </p>
+            {health && (
+              <div className="flex items-center gap-1.5 text-xs font-medium">
+                <span className={cn("w-2 h-2 rounded-full shrink-0", health.dot)} />
+                <span style={{ color: health.color }}>{health.label}</span>
+                {contingency?.delay_detected && (
+                  <span className="text-muted-foreground">({contingency.days_behind}d atrás)</span>
+                )}
+              </div>
+            )}
+          </div>
         </div>
         <Sheet>
           <SheetTrigger className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-white/10 bg-transparent hover:bg-white/5 transition-colors">
@@ -424,6 +481,35 @@ export default function PlanoPage() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Ações de contingência */}
+      {contingency?.delay_detected && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setContingencyModalOpen(true)}
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-amber-500/30 bg-amber-500/8 text-amber-400 hover:bg-amber-500/15 transition-colors"
+          >
+            <AlertCircle size={13} />
+            Corrigir plano ({contingency.days_behind}d atrás)
+          </button>
+          <button
+            onClick={() => setTurboOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border border-primary/30 bg-primary/8 text-primary hover:bg-primary/15 transition-colors"
+          >
+            <Zap size={13} />
+            Turbo 15min
+          </button>
+        </div>
+      )}
+      {!contingency?.delay_detected && (
+        <button
+          onClick={() => setTurboOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:border-white/20 transition-colors"
+        >
+          <Zap size={13} />
+          Sessão turbo (15min)
+        </button>
+      )}
 
       {/* Progresso geral */}
       <div className="glass rounded-2xl p-5">

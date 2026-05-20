@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core.deps import get_current_active_user
 from app.db.engine import get_session
+from app.models.models import User
 from app.schemas.auth import (
     AuthResponse,
     Enable2FAResponse,
@@ -110,3 +113,25 @@ async def resend_otp(data: VerifyEmailRequest, session: AsyncSession = Depends(g
         html=f"<p>Seu novo código é: <strong>{otp}</strong></p><p>Válido por 10 minutos.</p>",
     )
     return MessageResponse(message="Novo código enviado.")
+
+
+# ── LGPD endpoints ────────────────────────────────────────────────
+
+@router.delete("/me", response_model=MessageResponse)
+async def delete_account(
+    user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    return await auth_service.delete_account(str(user.id), session)
+
+
+@router.get("/me/export")
+async def export_my_data(
+    user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    data = await auth_service.export_user_data(str(user.id), session)
+    return JSONResponse(
+        content=data,
+        headers={"Content-Disposition": f"attachment; filename=meus-dados-enem-pro.json"},
+    )

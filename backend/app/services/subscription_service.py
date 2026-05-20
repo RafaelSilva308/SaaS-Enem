@@ -92,8 +92,7 @@ PLANS: list[PlanResponse] = [
         period_label="por trimestre",
         highlight=True,  # "Mais popular"
         trial_days=7,
-        features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL]
-        + [PlanFeatures(label="1 sessão de mentoria grátis/mês", included=True)],
+        features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
     PlanResponse(
         id="premium_6m",
@@ -102,8 +101,7 @@ PLANS: list[PlanResponse] = [
         period_label="por semestre",
         highlight=False,
         trial_days=7,
-        features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL]
-        + [PlanFeatures(label="2 sessões de mentoria grátis/mês", included=True)],
+        features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
 ]
 

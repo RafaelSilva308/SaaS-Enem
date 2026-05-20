@@ -1,3 +1,5 @@
+import html
+import json
 import uuid
 from datetime import timedelta
 
@@ -286,3 +288,137 @@ async def get_current_user(token: str, session: AsyncSession) -> User:
     if not user or user.account_status != "active":
         raise credentials_exception
     return user
+
+
+# ── LGPD: account deletion ────────────────────────────────────────
+
+async def delete_account(user_id: str, session: AsyncSession) -> MessageResponse:
+    """
+    Exclui a conta do usuário em conformidade com a LGPD:
+    - Anonimiza PII (nome, e-mail, telefone)
+    - Soft-delete (preserved_at)
+    - Cancela assinaturas ativas
+    - Limpa tokens Redis
+    """
+    from app.models.models import Subscription
+
+    uid = uuid.UUID(user_id)
+    r = await session.exec(select(User).where(User.id == uid))
+    user = r.first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    anon_suffix = str(uid)[:8]
+    user.email = f"deleted_{anon_suffix}@deleted.invalid"
+    user.name = "Conta excluída"
+    user.phone = None
+    user.profile_picture_url = None
+    user.totp_secret = None
+    user.password_hash = ""
+    user.deleted_at = __import__("app.models.models", fromlist=["utcnow"]).utcnow()
+    user.account_status = "deleted"
+    session.add(user)
+
+    # Cancel active subscriptions
+    subs_r = await session.exec(
+        select(Subscription)
+        .where(Subscription.user_id == uid)
+        .where(Subscription.status == "active")
+    )
+    for sub in subs_r.all():
+        sub.status = "cancelled"
+        session.add(sub)
+
+    await session.commit()
+
+    # Clear Redis tokens + push subscription
+    redis = await get_redis()
+    await redis.delete(f"refresh:{uid}", f"push_sub:{uid}", f"dashboard:{uid}")
+
+    return MessageResponse(message="Conta excluída com sucesso. Sentiremos sua falta.")
+
+
+# ── LGPD: data export ─────────────────────────────────────────────
+
+async def export_user_data(user_id: str, session: AsyncSession) -> dict:
+    """Exporta todos os dados do usuário em formato JSON (direito de portabilidade LGPD)."""
+    from app.models.models import (
+        Essay, EssayAnalysis, ExamResult, LearningProfile,
+        Subscription, Topic, UserPoint, UserStreak,
+    )
+
+    uid = uuid.UUID(user_id)
+
+    u_r = await session.exec(select(User).where(User.id == uid))
+    user = u_r.first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    lp_r = await session.exec(select(LearningProfile).where(LearningProfile.user_id == uid))
+    lp = lp_r.first()
+
+    pts_r = await session.exec(select(UserPoint).where(UserPoint.user_id == uid))
+    pts = pts_r.first()
+
+    streak_r = await session.exec(select(UserStreak).where(UserStreak.user_id == uid))
+    streak = streak_r.first()
+
+    subs_r = await session.exec(select(Subscription).where(Subscription.user_id == uid).order_by(Subscription.created_at.desc()))  # type: ignore
+    subs = subs_r.all()
+
+    exams_r = await session.exec(
+        select(ExamResult).where(ExamResult.user_id == uid)
+        .order_by(ExamResult.completed_at.desc()).limit(50)  # type: ignore
+    )
+    exams = exams_r.all()
+
+    essays_r = await session.exec(
+        select(Essay).where(Essay.user_id == uid)
+        .order_by(Essay.created_at.desc()).limit(50)  # type: ignore
+    )
+    essays = essays_r.all()
+
+    return {
+        "exported_at": __import__("datetime").datetime.utcnow().isoformat(),
+        "user": {
+            "id": str(user.id), "name": user.name, "email": user.email,
+            "date_of_birth": str(user.date_of_birth), "role": user.role,
+            "created_at": user.created_at.isoformat(),
+        },
+        "learning_profile": {
+            "learning_style": lp.learning_style if lp else None,
+            "preferred_time": lp.preferred_time if lp else None,
+            "daily_hours_goal": str(lp.daily_hours_goal) if lp else None,
+            "available_days": lp.available_days if lp else None,
+        } if lp else None,
+        "gamification": {
+            "total_points": pts.total_points if pts else 0,
+            "level": pts.current_level if pts else 1,
+            "experience_points": pts.experience_points if pts else 0,
+            "current_streak": streak.current_streak if streak else 0,
+            "longest_streak": streak.longest_streak if streak else 0,
+        },
+        "subscriptions": [
+            {
+                "plan_type": s.plan_type, "status": s.status,
+                "start_date": s.start_date.isoformat(), "end_date": s.end_date.isoformat(),
+                "amount_paid": str(s.amount_paid or "0"),
+            }
+            for s in subs
+        ],
+        "exam_results": [
+            {
+                "completed_at": e.completed_at.isoformat(),
+                "total_questions": e.total_questions, "correct": e.correct_answers,
+                "score_estimate": e.score_estimate,
+            }
+            for e in exams
+        ],
+        "essays": [
+            {
+                "theme": e.theme_title, "status": e.status,
+                "word_count": e.word_count, "submitted_at": e.submitted_at.isoformat() if e.submitted_at else None,
+            }
+            for e in essays
+        ],
+    }

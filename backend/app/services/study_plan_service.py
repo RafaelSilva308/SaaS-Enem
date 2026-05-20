@@ -491,8 +491,31 @@ async def complete_topic(topic_id: str, user_id: str, session: AsyncSession) -> 
 
     await session.commit()
 
-    # XP (será integrado com gamificação no Stage 3.1)
     xp = 15 if topic.is_completed else 0
+    sprint_completed = topic.is_completed and sprint and sprint.status == "completed"
+
+    if topic.is_completed:
+        try:
+            from app.services.gamification_service import award_xp
+            topic_xp = 90 if sprint_completed else 15  # +75 bônus de sprint
+            await award_xp(user_id, "topic_completed", topic_xp, session, topic_id)
+        except Exception:
+            pass
+
+    if sprint_completed and sprint:
+        try:
+            from app.services.notifications_service import create_notification
+            from app.schemas.notifications import NotifType
+            await create_notification(
+                uuid.UUID(user_id), NotifType.SPRINT_COMPLETED,
+                "Sprint semanal concluído! ⚡",
+                f"Você completou o sprint '{sprint.theme or 'semanal'}'. Parabéns!",
+                session,
+                related_entity_type="sprint",
+                related_entity_id=str(sprint.id),
+            )
+        except Exception:
+            pass
 
     # Calcular progresso do sprint
     sprint_pct = 0
