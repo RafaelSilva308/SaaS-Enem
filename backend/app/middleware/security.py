@@ -26,6 +26,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Request-ID"] = request.headers.get(
             "X-Request-ID", str(uuid.uuid4())
         )
+        # CSP: permite apenas recursos do próprio domínio + CDNs necessários
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
 
         if settings.APP_ENV == "production":
             response.headers["Strict-Transport-Security"] = (

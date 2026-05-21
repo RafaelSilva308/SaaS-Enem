@@ -34,9 +34,9 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== "undefined") {
           localStorage.setItem("access_token", accessToken)
           localStorage.setItem("refresh_token", refreshToken)
-          // Cookie de sessão para o middleware Next.js (server-side) — TTL 30 dias
           const maxAge = 30 * 24 * 60 * 60
-          document.cookie = `auth_session=1; path=/; max-age=${maxAge}; SameSite=Lax`
+          const secure = location.protocol === "https:" ? "; Secure" : ""
+          document.cookie = `auth_session=1; path=/; max-age=${maxAge}; SameSite=Lax${secure}`
         }
         set({ user, accessToken, refreshToken, isAuthenticated: true })
       },
@@ -47,7 +47,8 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== "undefined") {
           localStorage.removeItem("access_token")
           localStorage.removeItem("refresh_token")
-          document.cookie = "auth_session=; path=/; max-age=0; SameSite=Lax"
+          const secure = location.protocol === "https:" ? "; Secure" : ""
+          document.cookie = `auth_session=; path=/; max-age=0; SameSite=Lax${secure}`
         }
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
       },

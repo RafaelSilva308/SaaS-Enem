@@ -1,4 +1,7 @@
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_INSECURE_KEYS = {"change-me", "secret", "dev-secret", ""}
 
 
 class Settings(BaseSettings):
@@ -7,6 +10,15 @@ class Settings(BaseSettings):
     APP_ENV: str = "development"
     SECRET_KEY: str = "change-me"
     FRONTEND_URL: str = "http://localhost:3000"
+
+    @model_validator(mode="after")
+    def _validate_secret_key(self) -> "Settings":
+        if self.APP_ENV == "production" and self.SECRET_KEY in _INSECURE_KEYS:
+            raise ValueError(
+                "SECRET_KEY must be set to a strong random value in production. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        return self
 
     DATABASE_URL: str = ""
     DATABASE_URL_SYNC: str = ""

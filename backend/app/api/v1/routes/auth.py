@@ -14,6 +14,7 @@ from app.schemas.auth import (
     MessageResponse,
     RefreshRequest,
     RegisterRequest,
+    ResendOTPRequest,
     ResetPasswordRequest,
     TokenResponse,
     UserResponse,
@@ -100,19 +101,46 @@ async def get_me(
 
 
 @router.post("/resend-otp", response_model=MessageResponse)
-async def resend_otp(data: VerifyEmailRequest, session: AsyncSession = Depends(get_session)):
+async def resend_otp(data: ResendOTPRequest, session: AsyncSession = Depends(get_session)):
     """Reenvia o OTP de verificação de e-mail."""
     from app.core.security import generate_otp
     from app.core.redis import get_redis
+    from sqlmodel import select
+    from app.models.models import User
+
     redis = await get_redis()
+
+    # Rate limit: máximo 3 reenvios por e-mail a cada 10 minutos
+    rate_key = f"resend_otp_rate:{data.email}"
+    attempts = await redis.get(rate_key)
+    if attempts and int(attempts) >= 3:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Muitas tentativas. Aguarde antes de solicitar um novo código.",
+        )
+
+    # Verificar se o usuário existe e não está verificado
+    result = await session.exec(select(User).where(User.email == data.email))
+    user = result.first()
+    if not user or user.email_verified:
+        # Resposta genérica para não revelar existência do e-mail
+        return MessageResponse(message="Se o e-mail estiver pendente de verificação, um novo código foi enviado.")
+
     otp = generate_otp()
     await redis.setex(f"otp:{data.email}", 600, otp)
+
+    # Incrementar rate limit counter
+    pipe = redis.pipeline()
+    pipe.incr(rate_key)
+    pipe.expire(rate_key, 600)
+    await pipe.execute()
+
     await auth_service._send_email(
         to=data.email,
         subject="Novo código de verificação — SaaS ENEM",
         html=f"<p>Seu novo código é: <strong>{otp}</strong></p><p>Válido por 10 minutos.</p>",
     )
-    return MessageResponse(message="Novo código enviado.")
+    return MessageResponse(message="Se o e-mail estiver pendente de verificação, um novo código foi enviado.")
 
 
 # ── LGPD endpoints ────────────────────────────────────────────────

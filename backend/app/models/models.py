@@ -52,7 +52,7 @@ class Subscription(SQLModel, table=True):
     payment_method: str | None = Field(default=None, max_length=50)
     amount_paid: Decimal | None = Field(default=None, decimal_places=2, max_digits=10)
     payment_id: str | None = Field(default=None, max_length=255)
-    asaas_subscription_id: str | None = Field(default=None, max_length=255)
+    stripe_subscription_id: str | None = Field(default=None, max_length=255)
     auto_renewal: bool = Field(default=True)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)

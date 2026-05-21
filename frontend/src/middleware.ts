@@ -17,7 +17,7 @@ export function middleware(request: NextRequest) {
 
   if (session && (pathname === "/login" || pathname === "/register")) {
     const url = request.nextUrl.clone()
-    url.pathname = "/app/dashboard"
+    url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }
 

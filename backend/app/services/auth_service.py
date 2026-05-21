@@ -1,4 +1,4 @@
-import html
+import html as _html
 import json
 import uuid
 from datetime import timedelta
@@ -97,7 +97,7 @@ async def register(data: RegisterRequest, session: AsyncSession) -> MessageRespo
     await _send_email(
         to=data.email,
         subject="Confirme seu e-mail — SaaS ENEM",
-        html=f"<p>Olá {data.name},</p><p>Seu código de verificação é: <strong>{otp}</strong></p><p>Válido por 10 minutos.</p>",
+        html=f"<p>Olá {_html.escape(data.name)},</p><p>Seu código de verificação é: <strong>{otp}</strong></p><p>Válido por 10 minutos.</p>",
     )
 
     return MessageResponse(message="Cadastro realizado. Verifique seu e-mail para ativar a conta.")
@@ -163,7 +163,12 @@ async def login(data: LoginRequest, client_ip: str, session: AsyncSession) -> Au
 
     access_token = create_access_token(str(user.id))
     refresh_token = create_refresh_token()
-    await redis.setex(f"refresh:{refresh_token}", REFRESH_TTL, str(user.id))
+    user_id_str = str(user.id)
+    pipe = redis.pipeline()
+    pipe.setex(f"refresh:{refresh_token}", REFRESH_TTL, user_id_str)
+    pipe.sadd(f"user_refreshes:{user_id_str}", refresh_token)
+    pipe.expire(f"user_refreshes:{user_id_str}", REFRESH_TTL)
+    await pipe.execute()
 
     return AuthResponse(
         tokens=TokenResponse(access_token=access_token, refresh_token=refresh_token),
@@ -180,11 +185,15 @@ async def refresh_tokens(refresh_token: str, session: AsyncSession) -> TokenResp
     if not user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido")
 
-    await redis.delete(f"refresh:{refresh_token}")
-
     new_access = create_access_token(user_id)
     new_refresh = create_refresh_token()
-    await redis.setex(f"refresh:{new_refresh}", REFRESH_TTL, user_id)
+    pipe = redis.pipeline()
+    pipe.delete(f"refresh:{refresh_token}")
+    pipe.srem(f"user_refreshes:{user_id}", refresh_token)
+    pipe.setex(f"refresh:{new_refresh}", REFRESH_TTL, user_id)
+    pipe.sadd(f"user_refreshes:{user_id}", new_refresh)
+    pipe.expire(f"user_refreshes:{user_id}", REFRESH_TTL)
+    await pipe.execute()
 
     return TokenResponse(access_token=new_access, refresh_token=new_refresh)
 
@@ -331,9 +340,15 @@ async def delete_account(user_id: str, session: AsyncSession) -> MessageResponse
 
     await session.commit()
 
-    # Clear Redis tokens + push subscription
+    # Invalidar todos os refresh tokens do usuário + limpar caches
     redis = await get_redis()
-    await redis.delete(f"refresh:{uid}", f"push_sub:{uid}", f"dashboard:{uid}")
+    uid_str = str(uid)
+    tokens = await redis.smembers(f"user_refreshes:{uid_str}")
+    pipe = redis.pipeline()
+    for token in tokens:
+        pipe.delete(f"refresh:{token}")
+    pipe.delete(f"user_refreshes:{uid_str}", f"push_sub:{uid_str}", f"dashboard:{uid_str}")
+    await pipe.execute()
 
     return MessageResponse(message="Conta excluída com sucesso. Sentiremos sua falta.")
 

@@ -49,7 +49,7 @@ def upgrade() -> None:
         sa.Column("payment_method", sa.String(50), nullable=True),
         sa.Column("amount_paid", sa.Numeric(10, 2), nullable=True),
         sa.Column("payment_id", sa.String(255), nullable=True),
-        sa.Column("asaas_subscription_id", sa.String(255), nullable=True),
+        sa.Column("stripe_subscription_id", sa.String(255), nullable=True),
         sa.Column("auto_renewal", sa.Boolean(), server_default="true"),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("now()")),
