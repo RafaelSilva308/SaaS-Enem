@@ -1,14 +1,17 @@
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine, async_sessionmaker
 from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
+
+_is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 
 engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.APP_ENV == "development",
-    pool_size=5,
-    max_overflow=10,
-    pool_timeout=30,
+    # SQLite não suporta pool de conexões — PostgreSQL usa pool padrão
+    **({} if _is_sqlite else {"pool_size": 5, "max_overflow": 10, "pool_timeout": 30}),
+    connect_args={"check_same_thread": False} if _is_sqlite else {},
 )
 
 AsyncSessionLocal = async_sessionmaker(

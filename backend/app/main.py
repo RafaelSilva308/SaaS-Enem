@@ -24,6 +24,10 @@ from app.api.v1.routes.analysis import router as analysis_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Em desenvolvimento com SQLite: cria tabelas automaticamente (sem migrations)
+    if settings.APP_ENV == "development" and settings.DATABASE_URL.startswith("sqlite"):
+        from app.db.engine import create_all_tables
+        await create_all_tables()
     yield
     await close_redis()
 
