@@ -2,80 +2,40 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, Save, Send, Timer, Loader2 } from "lucide-react"
+import { ChevronLeft, Check, Clock, Send, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { api } from "@/lib/api"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 
-interface EssayData {
-  id: string
-  theme_title: string | null
-  theme_id: string | null
-  text: string
-  word_count: number | null
-  line_count: number | null
-  status: string
-}
+interface EssayData { id: string; theme_title: string | null; theme_id: string | null; text: string; word_count: number | null; line_count: number | null; status: string }
+interface ThemeData { id: string; title: string; description: string | null; year: number | null }
 
-interface ThemeData {
-  id: string
-  title: string
-  description: string | null
-  year: number | null
-}
-
-const MIN_LINES = 7
-const MAX_LINES = 30
-const TARGET_WORDS = 300
-
-// Simple countdown timer hook
-function useTimer(initialSeconds: number, enabled: boolean) {
-  const [seconds, setSeconds] = useState(initialSeconds)
-  const [running, setRunning] = useState(false)
-
-  useEffect(() => {
-    if (!running || !enabled) return
-    if (seconds <= 0) return
-    const t = setInterval(() => setSeconds((s) => s - 1), 1000)
-    return () => clearInterval(t)
-  }, [running, seconds, enabled])
-
-  const pad = (n: number) => String(n).padStart(2, "0")
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  const display = `${pad(m)}:${pad(s)}`
-  const isUrgent   = seconds < 300 && seconds > 60
-  const isCritical = seconds <= 60
-
-  return { display, running, setRunning, isUrgent, isCritical, done: seconds <= 0 }
-}
+const MIN_LINES = 7, MAX_LINES = 30
 
 export default function EscreverPage() {
-  const router       = useRouter()
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const essayId      = searchParams.get("essayId")
+  const essayId = searchParams.get("essayId")
 
-  const [essay, setEssay]       = useState<EssayData | null>(null)
-  const [theme, setTheme]       = useState<ThemeData | null>(null)
-  const [text, setText]         = useState("")
-  const [saving, setSaving]     = useState(false)
-  const [savedAt, setSavedAt]   = useState<Date | null>(null)
+  const [essay, setEssay] = useState<EssayData | null>(null)
+  const [theme, setTheme] = useState<ThemeData | null>(null)
+  const [text, setText] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [savedAt, setSavedAt] = useState<Date | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [loading, setLoading]   = useState(true)
+  const [loading, setLoading] = useState(true)
   const [showTimer, setShowTimer] = useState(false)
-  const saveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const timer30min = useTimer(30 * 60, showTimer)
+  const [timerSec, setTimerSec] = useState(30 * 60)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!essayId) { router.push("/app/redacao"); return }
     api.get(`/essays/${essayId}`)
       .then(({ data }) => {
-        setEssay(data)
-        setText(data.text || "")
+        setEssay(data); setText(data.text || "")
         if (data.theme_id) {
           api.get("/essays/themes").then(({ data: td }) => {
-            const t = td.themes.find((t: ThemeData) => t.id === data.theme_id)
+            const t = td.themes.find((th: ThemeData) => th.id === data.theme_id)
             if (t) setTheme(t)
           }).catch(() => {})
         }
@@ -84,8 +44,20 @@ export default function EscreverPage() {
       .finally(() => setLoading(false))
   }, [essayId, router])
 
-  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0
-  const lineCount = text ? text.split("\n").filter((l) => l.trim()).length : 0
+  const handleTimer = () => {
+    if (!showTimer) {
+      setShowTimer(true)
+      timerRef.current = setInterval(() => setTimerSec(s => { if (s <= 1) { clearInterval(timerRef.current!); return 0 } return s - 1 }), 1000)
+    } else {
+      setShowTimer(false)
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }
+
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0
+  const lines = text ? text.split("\n").filter(l => l.trim()).length : 0
+  const chars = text.length
+  const lineWarning = lines > MAX_LINES
 
   const saveDebounced = useCallback((newText: string) => {
     if (!essayId) return
@@ -93,163 +65,154 @@ export default function EscreverPage() {
     saveTimer.current = setTimeout(async () => {
       setSaving(true)
       try {
-        await api.put(`/essays/${essayId}`, {
-          text: newText,
-          word_count: newText.trim() ? newText.trim().split(/\s+/).length : 0,
-          line_count: newText ? newText.split("\n").filter((l) => l.trim()).length : 0,
-        })
+        await api.put(`/essays/${essayId}`, { text: newText, word_count: newText.trim() ? newText.trim().split(/\s+/).length : 0, line_count: newText ? newText.split("\n").filter(l => l.trim()).length : 0 })
         setSavedAt(new Date())
-      } catch { /* silently ignore auto-save errors */ }
+      } catch { /* silently ignore */ }
       finally { setSaving(false) }
     }, 1500)
   }, [essayId])
 
-  const handleChange = (val: string) => {
-    setText(val)
-    saveDebounced(val)
-  }
+  const handleChange = (val: string) => { setText(val); saveDebounced(val) }
 
   const handleSubmit = async () => {
-    if (wordCount < 50) { toast.error("A redação está muito curta (mínimo 50 palavras)"); return }
+    if (words < 50) { toast.error("A redação está muito curta (mínimo 50 palavras)"); return }
     setSubmitting(true)
     try {
-      // Final save before submit
-      if (essayId) {
-        await api.put(`/essays/${essayId}`, {
-          text, word_count: wordCount, line_count: lineCount,
-        })
-      }
+      if (essayId) await api.put(`/essays/${essayId}`, { text, word_count: words, line_count: lines })
       await api.post(`/essays/${essayId}/submit`)
       toast.success("Redação enviada! Aguarde a análise...")
       router.push(`/app/redacao/${essayId}`)
-    } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
-      toast.error(msg ?? "Erro ao enviar redação")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail ?? "Erro ao enviar redação")
       setSubmitting(false)
     }
   }
 
-  const wordColor =
-    wordCount < 150 ? "#ef4444" :
-    wordCount < 250 ? "#f59e0b" :
-    wordCount <= 350 ? "#10b981" : "#f59e0b"
-
-  const lineWarning = lineCount < MIN_LINES
-    ? `Mínimo ${MIN_LINES} linhas (${lineCount})`
-    : lineCount > MAX_LINES
-    ? `Máximo ${MAX_LINES} linhas (${lineCount})`
-    : null
+  const tSec = timerSec
+  const tPad = (n: number) => String(n).padStart(2, "0")
+  const timerDisplay = `${tPad(Math.floor(tSec / 60))}:${tPad(tSec % 60)}`
+  const timerWarn = tSec < 300
+  const timerCrit = tSec <= 60
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[70vh]">
-        <Loader2 className="animate-spin text-primary" size={32} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+        <Loader2 className="animate-spin" style={{ color: "var(--primary)" }} size={32} />
       </div>
     )
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col gap-3 max-w-6xl">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 shrink-0 flex-wrap">
-        <Button variant="ghost" size="sm" onClick={() => router.push("/app/redacao")}>
-          <ArrowLeft size={15} className="mr-1" /> Temas
-        </Button>
-
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold truncate">{essay?.theme_title ?? "Redação"}</p>
-        </div>
-
-        {/* Timer toggle */}
-        <button
-          onClick={() => { setShowTimer((v) => { if (!v) timer30min.setRunning(true); return !v }); }}
-          className={cn(
-            "flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border transition-colors",
-            showTimer
-              ? timer30min.isCritical ? "border-destructive text-destructive animate-pulse"
-              : timer30min.isUrgent ? "border-amber-400 text-amber-400"
-              : "border-secondary text-secondary"
-              : "border-border text-muted-foreground hover:text-foreground"
-          )}
-        >
-          <Timer size={14} />
-          {showTimer ? timer30min.display : "30 min"}
-        </button>
-
-        {/* Auto-save status */}
-        <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1.5">
-          {saving ? <><Loader2 size={12} className="animate-spin" /> Salvando…</> :
-           savedAt ? <><Save size={12} className="text-secondary" /> Salvo</> :
-           null}
-        </span>
-
-        <Button
-          className="gradient-brand text-white gap-2 shrink-0"
-          onClick={handleSubmit}
-          disabled={submitting || wordCount < 50}
-        >
-          {submitting ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-          Enviar para correção
-        </Button>
-      </div>
-
-      {/* Split pane */}
-      <div className="flex-1 min-h-0 flex gap-4">
-        {/* Left: theme proposal */}
-        <div className="w-72 shrink-0 hidden lg:flex flex-col glass rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border shrink-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Proposta
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            {theme ? (
-              <div className="space-y-3">
-                {theme.year && (
-                  <span className="text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                    ENEM {theme.year}
-                  </span>
-                )}
-                <p className="text-sm font-semibold leading-snug">{theme.title}</p>
-                {theme.description && (
-                  <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {theme.description}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">{essay?.theme_title}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Right: editor */}
-        <div className="flex-1 min-w-0 flex flex-col glass rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between shrink-0 flex-wrap gap-2">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Sua redação
-            </p>
-            <div className="flex items-center gap-3 text-xs flex-wrap">
-              <span style={{ color: wordColor }} className="font-medium">
-                {wordCount} palavras
-              </span>
-              <span className={cn(
-                "font-medium",
-                lineWarning ? "text-amber-400" : "text-muted-foreground",
-              )}>
-                {lineWarning ?? `${lineCount} linhas`}
-              </span>
-              <span className="text-muted-foreground/50">meta: ~{TARGET_WORDS} palavras</span>
+    <div style={{ position: "fixed", inset: 0, background: "var(--background)", zIndex: 40, display: "flex", flexDirection: "column" }}>
+      {/* Topbar */}
+      <div className="row between" style={{ padding: "14px 28px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)" }}>
+        <div className="row" style={{ gap: 14 }}>
+          <button className="btn btn-icon" onClick={() => router.push("/app/redacao")}><ChevronLeft size={15} /></button>
+          <div className="col" style={{ lineHeight: 1.2 }}>
+            <div style={{ fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>REDAÇÃO · TEMA DO DIA</div>
+            <div style={{ fontSize: 14, fontWeight: 600, maxWidth: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {essay?.theme_title ?? "Redação"}
             </div>
           </div>
+        </div>
 
-          <textarea
-            className="flex-1 p-5 bg-transparent resize-none text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/30 focus:outline-none font-mono"
-            placeholder="Escreva sua introdução aqui…&#10;&#10;Organize o texto em parágrafos claros.&#10;Lembre-se da proposta de intervenção na conclusão."
-            value={text}
-            onChange={(e) => handleChange(e.target.value)}
-            spellCheck={false}
-          />
+        <div className="row" style={{ gap: 16, fontSize: 12 }}>
+          <div className="row" style={{ gap: 6, color: "var(--muted-foreground)" }}>
+            {saving
+              ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 1.5 }} /> Salvando…</>
+              : savedAt
+              ? <><Check size={13} color="#6ee7b7" /> Salvo automaticamente</>
+              : null
+            }
+          </div>
+          <div className="row" style={{ gap: 14, color: "var(--muted-foreground)" }}>
+            <span className="mono">Linhas: <strong style={{ color: lineWarning ? "#fca5a5" : "var(--foreground)" }}>{lines}</strong>/30</span>
+            <span className="mono">Palavras: <strong style={{ color: "var(--foreground)" }}>{words}</strong></span>
+            <span className="mono">Carac: <strong style={{ color: "var(--foreground)" }}>{chars}</strong></span>
+          </div>
+        </div>
+
+        <div className="row" style={{ gap: 8 }}>
+          <button className="btn btn-secondary" onClick={handleTimer} style={{ borderColor: showTimer ? (timerCrit ? "rgba(239,68,68,0.4)" : timerWarn ? "rgba(245,158,11,0.4)" : "rgba(37,99,235,0.3)") : undefined, color: showTimer ? (timerCrit ? "#fca5a5" : timerWarn ? "#fcd34d" : "var(--brand-blue-light)") : undefined }}>
+            <Clock size={13} />
+            {showTimer ? timerDisplay : "Ativar timer"}
+          </button>
+          <button className="btn btn-violet" onClick={handleSubmit} disabled={submitting || words < 50}>
+            {submitting ? <span className="spinner" /> : <Send size={14} />}
+            Enviar para correção
+          </button>
+        </div>
+      </div>
+
+      {/* Body — split */}
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "0.38fr 0.62fr", overflow: "hidden" }}>
+        {/* Theme panel */}
+        <div style={{ overflowY: "auto", padding: "28px 32px", borderRight: "1px solid var(--border)", background: "rgba(15, 23, 42, 0.3)" }}>
+          <span className="badge badge-premium" style={{ marginBottom: 12 }}>✦ Tema oficial</span>
+          <h2 style={{ fontSize: 19, fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.3, marginBottom: 20 }}>
+            {theme?.title ?? essay?.theme_title}
+          </h2>
+
+          {theme?.description && (
+            <div className="card" style={{ padding: 14, marginBottom: 16 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: "#bfdbfe", marginBottom: 6 }}>Proposta</div>
+              <p style={{ fontSize: 13, lineHeight: 1.6, color: "#cbd5e1", margin: 0 }}>{theme.description}</p>
+            </div>
+          )}
+
+          <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginTop: 20, marginBottom: 10 }}>
+            Estrutura sugerida
+          </div>
+          <div className="col" style={{ gap: 8 }}>
+            {[
+              { n: 1, t: "Introdução", d: "Apresente o tema e sua tese" },
+              { n: 2, t: "Desenvolvimento I", d: "Argumento 1 com dados e citação" },
+              { n: 3, t: "Desenvolvimento II", d: "Argumento 2 com contraponto" },
+              { n: 4, t: "Conclusão", d: "Proposta de intervenção (5 elementos)" },
+            ].map((s) => (
+              <div key={s.n} className="row" style={{ gap: 10, padding: "10px 12px", background: "rgba(15,23,42,0.4)", borderRadius: 10, border: "1px solid var(--border)" }}>
+                <div style={{ width: 22, height: 22, borderRadius: 8, background: "rgba(124,58,237,0.18)", color: "#c4b5fd", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{s.n}</div>
+                <div className="col" style={{ lineHeight: 1.2 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600 }}>{s.t}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>{s.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Editor panel */}
+        <div style={{ overflowY: "auto", padding: "32px 56px" }}>
+          <div style={{ maxWidth: 720, margin: "0 auto" }}>
+            <div className="row between" style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11.5, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>SUA REDAÇÃO</div>
+            </div>
+            <textarea
+              className="input"
+              value={text}
+              onChange={(e) => handleChange(e.target.value)}
+              placeholder={"Escreva sua introdução aqui…\n\nOrganize o texto em parágrafos claros.\nLembre-se da proposta de intervenção na conclusão."}
+              spellCheck={false}
+              style={{ fontFamily: "'Outfit', 'Iowan Old Style', Georgia, serif", fontSize: 17, lineHeight: 1.85, minHeight: 500, border: "none", background: "transparent", padding: 0, resize: "none" }}
+            />
+
+            {/* AI tip */}
+            <div className="card card-premium" style={{ padding: 14, marginTop: 18 }}>
+              <div className="row" style={{ gap: 10 }}>
+                <Sparkles size={15} color="#a78bfa" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div className="col" style={{ lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "#c4b5fd" }}>Sugestão da IA enquanto você escreve</div>
+                  <div style={{ fontSize: 12.5, color: "#cbd5e1", marginTop: 2 }}>
+                    {words < 100
+                      ? "Continue escrevendo — apresente o tema e sua tese de forma clara na introdução."
+                      : words < 250
+                      ? "Bom progresso! Desenvolva seus argumentos com dados e referências concretas."
+                      : "Excelente extensão! Lembre-se de elaborar uma proposta de intervenção completa na conclusão."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

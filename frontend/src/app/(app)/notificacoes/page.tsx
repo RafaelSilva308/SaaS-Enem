@@ -1,26 +1,54 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { Bell, CheckCheck, Loader2 } from "lucide-react"
+import { Bell, CheckCheck, Loader2, Settings, PenTool, Trophy, Target, Sparkles, Users, CheckCircle2 } from "lucide-react"
 import { api } from "@/lib/api"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { NotificationItem } from "@/components/notifications/NotificationItem"
+import { useRouter } from "next/navigation"
 
 interface NotifData {
-  id: string
-  type: string | null
-  title: string | null
-  message: string | null
-  related_entity_type: string | null
-  related_entity_id: string | null
-  is_read: boolean
-  created_at: string
+  id: string; type: string | null; title: string | null; message: string | null
+  related_entity_type: string | null; related_entity_id: string | null
+  is_read: boolean; created_at: string
 }
 
 const PER_PAGE = 20
 
+const NOTIF_ICON: Record<string, { icon: React.ElementType; color: string }> = {
+  badge_earned:        { icon: Trophy,       color: "#fbbf24" },
+  level_up:            { icon: Sparkles,     color: "#a78bfa" },
+  essay_analyzed:      { icon: PenTool,      color: "#a78bfa" },
+  simulado_reminder:   { icon: Target,       color: "#60a5fa" },
+  sprint_completed:    { icon: CheckCircle2, color: "#34d399" },
+  daily_reminder:      { icon: Bell,         color: "#60a5fa" },
+  plan_updated:        { icon: Sparkles,     color: "#a78bfa" },
+  forum_reply:         { icon: Users,        color: "#60a5fa" },
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const h = Math.floor(diff / 3600000)
+  if (h < 1) return "há poucos min"
+  if (h < 24) return `há ${h}h`
+  const d = Math.floor(h / 24)
+  if (d === 1) return "ontem"
+  return `${d} dias`
+}
+
+function groupByDate(notifs: NotifData[]) {
+  const today = new Date().toDateString()
+  const yesterday = new Date(Date.now() - 86400000).toDateString()
+  const groups: Record<string, NotifData[]> = {}
+  notifs.forEach(n => {
+    const d = new Date(n.created_at).toDateString()
+    const label = d === today ? "Hoje" : d === yesterday ? "Ontem" : "Mais antigas"
+    if (!groups[label]) groups[label] = []
+    groups[label].push(n)
+  })
+  return groups
+}
+
 export default function NotificacoesPage() {
+  const router = useRouter()
   const [filter, setFilter] = useState<"all" | "unread">("all")
   const [notifs, setNotifs] = useState<NotifData[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,22 +59,16 @@ export default function NotificacoesPage() {
   const fetchNotifs = useCallback(async (p: number, f: "all" | "unread", replace: boolean) => {
     setLoading(true)
     try {
-      const { data } = await api.get("/notifications", {
-        params: { page: p, per_page: PER_PAGE, unread_only: f === "unread" },
-      })
+      const { data } = await api.get("/notifications", { params: { page: p, per_page: PER_PAGE, unread_only: f === "unread" } })
       const items: NotifData[] = data.items ?? []
       setNotifs(prev => replace ? items : [...prev, ...items])
       setTotal(data.total ?? 0)
       setHasMore(p * PER_PAGE < (data.total ?? 0))
-    } catch { /* ignore */ } finally {
-      setLoading(false)
-    }
+    } catch { /* ignore */ }
+    finally { setLoading(false) }
   }, [])
 
-  useEffect(() => {
-    setPage(1)
-    fetchNotifs(1, filter, true)
-  }, [filter, fetchNotifs])
+  useEffect(() => { setPage(1); fetchNotifs(1, filter, true) }, [filter, fetchNotifs])
 
   const markRead = async (id: string) => {
     try {
@@ -62,87 +84,97 @@ export default function NotificacoesPage() {
     } catch { /* ignore */ }
   }
 
-  const loadMore = () => {
-    const next = page + 1
-    setPage(next)
-    fetchNotifs(next, filter, false)
-  }
-
   const unreadCount = notifs.filter(n => !n.is_read).length
+  const groups = groupByDate(notifs)
+
+  const TABS = [
+    { id: "all" as const, label: "Todas", count: total },
+    { id: "unread" as const, label: "Não lidas", count: unreadCount },
+  ]
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-brand flex items-center justify-center shrink-0">
-            <Bell size={20} className="text-white" />
+    <div className="page-scroll">
+      <div className="page-inner stagger">
+        <div className="page-header">
+          <div className="col">
+            <div className="breadcrumb">Conta → Notificações</div>
+            <h1 className="page-title">Notificações</h1>
           </div>
-          <div>
-            <h1 className="text-xl font-bold">Notificações</h1>
-            <p className="text-sm text-muted-foreground">{total} no total</p>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn btn-ghost btn-sm" onClick={markAllRead} disabled={unreadCount === 0}>
+              Marcar todas como lidas
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/configuracoes")}>
+              <Settings size={13} /> Preferências
+            </button>
           </div>
         </div>
-        {unreadCount > 0 && (
-          <Button variant="outline" size="sm" onClick={markAllRead} className="gap-2">
-            <CheckCheck size={14} />
-            Marcar tudo como lido
-          </Button>
-        )}
-      </div>
 
-      {/* Filter tabs */}
-      <div className="flex gap-1 p-1 bg-muted/30 rounded-xl w-fit">
-        {(["all", "unread"] as const).map(f => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              "px-4 py-1.5 rounded-lg text-sm font-medium transition-colors",
-              filter === f
-                ? "bg-background shadow text-foreground"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {f === "all" ? "Todas" : "Não lidas"}
-          </button>
-        ))}
-      </div>
+        {/* Tabs */}
+        <div className="row between" style={{ marginBottom: 18 }}>
+          <div className="tabs">
+            {TABS.map(t => (
+              <button key={t.id} className={`tab ${filter === t.id ? "tab-active" : ""}`} onClick={() => setFilter(t.id)}>
+                {t.label} <span className="mono" style={{ marginLeft: 4, opacity: 0.6 }}>{t.count}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* List */}
-      <div className="glass rounded-2xl overflow-hidden divide-y divide-border/30">
+        {/* List grouped */}
         {loading && notifs.length === 0 ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-muted-foreground" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 0" }}>
+            <Loader2 className="animate-spin" style={{ color: "var(--muted-foreground)" }} size={24} />
           </div>
         ) : notifs.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-muted-foreground">
-            <Bell size={32} className="opacity-30" />
-            <p className="text-sm">
+          <div className="card" style={{ padding: 48, textAlign: "center" }}>
+            <Bell size={32} style={{ color: "var(--muted-foreground)", opacity: 0.3, margin: "0 auto 12px" }} />
+            <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>
               {filter === "unread" ? "Nenhuma notificação não lida" : "Nenhuma notificação"}
-            </p>
+            </div>
           </div>
         ) : (
-          notifs.map(n => (
-            <NotificationItem key={n.id} notification={n} onMarkRead={markRead} />
-          ))
+          <div className="col" style={{ gap: 24 }}>
+            {Object.entries(groups).map(([label, items]) => (
+              <div key={label}>
+                <div className="row" style={{ gap: 8, marginBottom: 10, fontSize: 11.5, color: "var(--muted-foreground)", letterSpacing: "0.06em", textTransform: "uppercase", fontWeight: 600 }}>
+                  <span>{label}</span>
+                  <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                </div>
+                <div className="col" style={{ gap: 6 }}>
+                  {items.map(n => {
+                    const iconCfg = NOTIF_ICON[n.type ?? ""] ?? { icon: Bell, color: "#60a5fa" }
+                    const Ico = iconCfg.icon
+                    return (
+                      <div key={n.id} className="row card card-hover" style={{ padding: 14, gap: 14, background: n.is_read ? "rgba(15,23,42,0.65)" : "rgba(37,99,235,0.04)", border: `1px solid ${n.is_read ? "var(--border)" : "rgba(37,99,235,0.18)"}`, cursor: "pointer", position: "relative" }} onClick={() => markRead(n.id)}>
+                        {!n.is_read && <span style={{ position: "absolute", left: 4, top: "50%", transform: "translateY(-50%)", width: 4, height: 28, background: "var(--primary)", borderRadius: 999 }} />}
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: `${iconCfg.color}20`, color: iconCfg.color, display: "grid", placeItems: "center", flexShrink: 0, marginLeft: 8 }}>
+                          <Ico size={15} />
+                        </div>
+                        <div className="col" style={{ flex: 1, lineHeight: 1.3 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: n.is_read ? 500 : 600 }}>{n.title}</div>
+                          <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 1 }}>{n.message}</div>
+                        </div>
+                        <div style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>{timeAgo(n.created_at)}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Load more */}
+        {hasMore && (
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+            <button className="btn btn-secondary" onClick={() => { const next = page + 1; setPage(next); fetchNotifs(next, filter, false) }} disabled={loading}>
+              {loading && <span className="spinner" />}
+              Carregar mais
+            </button>
+          </div>
         )}
       </div>
-
-      {/* Load more */}
-      {hasMore && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={loadMore}
-            disabled={loading}
-            className="gap-2"
-          >
-            {loading && <Loader2 size={14} className="animate-spin" />}
-            Carregar mais
-          </Button>
-        </div>
-      )}
     </div>
   )
 }

@@ -28,12 +28,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return
-
     if (!isAuthenticated) {
       router.replace("/login")
       return
     }
-
     if (pathname !== "/app/onboarding") {
       api.get("/diagnostic/status")
         .then(({ data }) => {
@@ -64,12 +62,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     } catch { /* silently ignore */ }
   }, [isAuthenticated, pathname])
 
-  // Fetch unread count + gamification on mount; poll both
   useEffect(() => {
     if (!mounted || !isAuthenticated || pathname === "/app/onboarding") return
     fetchUnreadCount()
     fetchGamification()
-
     gamPollRef.current = setInterval(() => {
       fetchGamification()
       fetchUnreadCount()
@@ -77,14 +73,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => { if (gamPollRef.current) clearInterval(gamPollRef.current) }
   }, [mounted, isAuthenticated, pathname, fetchGamification, fetchUnreadCount])
 
-  // Badge toasts
   useEffect(() => {
     if (!newBadges.length) return
     newBadges.forEach((b) => {
-      toast(
-        `${b.icon ?? "🏅"} Badge desbloqueado: ${b.name}`,
-        { description: b.description ?? undefined, duration: 5000 },
-      )
+      toast(`${b.icon ?? "🏅"} Badge desbloqueado: ${b.name}`, {
+        description: b.description ?? undefined,
+        duration: 5000,
+      })
     })
     clearNewBadges()
   }, [newBadges, clearNewBadges])
@@ -97,40 +92,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Onboarding sem shell
   if (pathname === "/app/onboarding") {
     return <>{children}</>
   }
 
+  const isFullScreen =
+    pathname.includes("/simulados/") && pathname.endsWith("/fazer") ||
+    pathname.includes("/redacao/escrever")
+
   return (
-    <div className="flex min-h-dvh">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/60 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+    <div className="app-shell" style={{ display: "flex" }}>
+      {!isFullScreen && (
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          unreadCount={unreadCount}
         />
       )}
 
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Level-up modal */}
       {leveledUp && <LevelUpModal level={level} onClose={clearLevelUp} />}
 
-      <div className="flex flex-col flex-1 min-w-0 lg:ml-60">
-        <TopBar
-          onMenuClick={() => setSidebarOpen(true)}
-          notificationCount={unreadCount}
-          onUnreadChange={setUnreadCount}
-        />
-        <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6 overflow-auto">
+      <main style={{ flex: 1, position: "relative", zIndex: 1, height: "100vh", overflow: "hidden" }}>
+        {!isFullScreen && (
+          <TopBar
+            onMenuClick={() => setSidebarOpen(true)}
+            notificationCount={unreadCount}
+            onUnreadChange={setUnreadCount}
+          />
+        )}
+        <div style={isFullScreen ? { height: "100vh" } : { height: "calc(100vh - 64px)", overflowY: "auto" }}>
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
 
-      <BottomNav />
-      <InstallPrompt />
-      <PushSetup />
+      {!isFullScreen && (
+        <>
+          <BottomNav />
+          <InstallPrompt />
+          <PushSetup />
+        </>
+      )}
     </div>
   )
 }
