@@ -12,7 +12,7 @@ def uuid_pk() -> uuid.UUID:
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 # ─────────────────────────────────────────────────────────────────
