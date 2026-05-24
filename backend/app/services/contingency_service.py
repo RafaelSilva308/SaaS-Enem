@@ -85,7 +85,19 @@ async def get_status(user_id: str, session: AsyncSession) -> ContingencyStatusOu
     uid = uuid.UUID(user_id)
     plan = await _get_active_plan(uid, session)
     if not plan:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nenhum plano ativo.")
+        return ContingencyStatusOut(
+            plan_id="",
+            is_contingency=False,
+            delay_detected=False,
+            severity="ok",
+            expected_hours=0.0,
+            actual_hours=0.0,
+            hours_behind=0.0,
+            delay_percent=0.0,
+            days_behind=0,
+            health_score=100,
+            weakest_subject=None,
+        )
 
     today = date.today()
     sprints = await _get_sprints(plan.id, session)
