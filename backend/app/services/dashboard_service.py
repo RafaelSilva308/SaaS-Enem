@@ -16,7 +16,7 @@ from app.schemas.dashboard import (
     StartSessionResponse, WeeklyActivityItem,
 )
 
-ENEM_DT = datetime(2026, 11, 2, 8, 0, 0, tzinfo=timezone.utc)
+ENEM_DT = datetime(2026, 11, 2, 8, 0, 0)
 
 SUBJECT_LABELS = {
     "linguagens": "Linguagens",
@@ -35,7 +35,7 @@ PRIORITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
 
 
 def _calc_countdown() -> CountdownData:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     delta = ENEM_DT - now
     if delta.total_seconds() <= 0:
         return CountdownData(days=0, hours=0, minutes=0, seconds=0, enem_date="2026-11-02")
@@ -47,7 +47,7 @@ def _calc_countdown() -> CountdownData:
 
 
 async def get_dashboard(user: User, session: AsyncSession) -> DashboardResponse:
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     today_start = now_utc.replace(hour=0, minute=0, second=0, microsecond=0)
     today_end = today_start + timedelta(days=1)
 
@@ -215,7 +215,7 @@ async def start_session(
     session_type: str,
     db: AsyncSession,
 ) -> StartSessionResponse:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     new_session = StudySession(
         user_id=user.id,
         topic_id=uuid.UUID(topic_id) if topic_id else None,
@@ -243,7 +243,7 @@ async def end_session(
     if not study_session:
         raise HTTPException(status_code=404, detail="Sessão não encontrada ou já encerrada")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     duration = max(1, int((now - study_session.start_time).total_seconds() // 60))
     study_session.end_time = now
     study_session.duration_minutes = duration

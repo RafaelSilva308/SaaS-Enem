@@ -54,7 +54,7 @@ async def _check_submission_limit(user: User, db: AsyncSession) -> None:
     if is_premium:
         return
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     count_r = await db.exec(

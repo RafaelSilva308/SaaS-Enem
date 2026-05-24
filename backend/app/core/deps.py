@@ -44,7 +44,7 @@ async def get_premium_user(
         .where(Subscription.user_id == user.id)
         .where(Subscription.status == "active")
         .where(Subscription.plan_type != "free")
-        .where(Subscription.end_date > datetime.now(timezone.utc))
+        .where(Subscription.end_date > datetime.now(timezone.utc).replace(tzinfo=None))
         .limit(1)
     )
     if not r.first():

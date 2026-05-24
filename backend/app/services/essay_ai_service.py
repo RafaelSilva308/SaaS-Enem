@@ -299,7 +299,7 @@ async def _analyze_essay(essay_id: str, db: AsyncSession) -> None:
         language_feedback=analysis_data.get("language_feedback"),
         grammar_errors=analysis_data.get("grammar_errors", []),
         suggestions=analysis_data.get("suggestions", []),
-        analysed_at=datetime.now(timezone.utc),
+        analysed_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(analysis)
 

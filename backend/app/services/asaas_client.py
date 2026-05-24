@@ -78,7 +78,7 @@ async def create_subscription(
     trial_days: int = 7,
 ) -> dict:
     cycle_info = BILLING_CYCLES[plan_type]
-    next_due = (datetime.now(timezone.utc) + timedelta(days=trial_days)).strftime("%Y-%m-%d")
+    next_due = (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=trial_days)).strftime("%Y-%m-%d")
 
     if _mock_mode():
         mock_payment_id = f"mock_pay_{plan_type}_{billing_method}"
@@ -139,7 +139,7 @@ async def get_pix_qr_code(payment_id: str) -> dict:
         return {
             "encodedImage": "",  # base64 vazio em dev
             "payload": "00020126580014BR.GOV.BCB.PIX0136mock-pix-key-for-dev-environment5204000053039865406" + "59.905802BR5913SaaS ENEM Dev6009SAO PAULO62070503***6304MOCK",
-            "expirationDate": (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
+            "expirationDate": (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)).isoformat(),
         }
 
     async with httpx.AsyncClient(base_url=_base_url(), headers=_headers(), timeout=30) as client:

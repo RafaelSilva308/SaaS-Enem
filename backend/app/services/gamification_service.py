@@ -463,7 +463,7 @@ async def process_daily_streaks(db: AsyncSession) -> int:
 
 async def _build_heatmap(user_id: uuid.UUID, db: AsyncSession) -> list[HeatmapDay]:
     """Retorna os últimos 84 dias (12 semanas) de atividade de estudo."""
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.now(timezone.utc).replace(tzinfo=None).replace(hour=0, minute=0, second=0, microsecond=0)
     period_start = today - timedelta(days=83)
 
     sessions_r = await db.exec(
@@ -554,7 +554,7 @@ async def get_leaderboard(user: User, db: AsyncSession) -> LeaderboardResponse:
     all_time_ups = all_time_r.all()
 
     # Weekly: somar XP dos últimos 7 dias por usuário
-    week_start = datetime.now(timezone.utc) - timedelta(days=7)
+    week_start = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=7)
     weekly_history_r = await db.exec(
         select(PointHistory.user_id, func.sum(PointHistory.points_earned).label("weekly_xp"))  # type: ignore[arg-type]
         .where(PointHistory.created_at >= week_start)
