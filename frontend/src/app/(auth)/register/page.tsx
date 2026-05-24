@@ -90,6 +90,7 @@ export default function RegisterPage() {
   }
 
   return (
+    <div className="auth-simple-wrap">
     <div className="glass rounded-2xl p-8 space-y-6">
       <div className="text-center space-y-1">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl gradient-brand mb-3">
@@ -182,6 +183,7 @@ export default function RegisterPage() {
           Entrar
         </Link>
       </p>
+    </div>
     </div>
   )
 }

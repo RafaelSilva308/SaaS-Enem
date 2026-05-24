@@ -114,7 +114,7 @@ export function TopBar({ onMenuClick, notificationCount = 0, onUnreadChange }: P
         </Button>
 
         {bellOpen && (
-          <div className="absolute right-0 top-11 z-30 w-80 glass-strong rounded-xl shadow-2xl border border-border overflow-hidden">
+          <div className="absolute right-0 top-11 z-30 w-80 max-w-[calc(100vw-24px)] glass-strong rounded-xl shadow-2xl border border-border overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <span className="text-sm font-semibold">Notificações</span>
               <button

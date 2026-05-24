@@ -41,6 +41,7 @@ function ResetPasswordPageInner() {
   // Link inválido — sem token na URL
   if (!token) {
     return (
+      <div className="auth-simple-wrap">
       <div className="glass rounded-2xl p-8 space-y-4 text-center">
         <h1 className="text-xl font-bold text-destructive">Link inválido</h1>
         <p className="text-muted-foreground text-sm">
@@ -49,6 +50,7 @@ function ResetPasswordPageInner() {
         <Link href="/forgot-password">
           <Button className="gradient-blue hover:opacity-90 font-semibold">Solicitar novo link</Button>
         </Link>
+      </div>
       </div>
     )
   }
@@ -74,6 +76,7 @@ function ResetPasswordPageInner() {
 
   if (done) {
     return (
+      <div className="auth-simple-wrap">
       <div className="glass rounded-2xl p-8 space-y-4 text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-secondary/20 mb-2">
           <CheckCircle size={28} className="text-secondary" />
@@ -86,10 +89,12 @@ function ResetPasswordPageInner() {
           <Button className="mt-2 gradient-blue hover:opacity-90 font-semibold">Ir para o login</Button>
         </Link>
       </div>
+      </div>
     )
   }
 
   return (
+    <div className="auth-simple-wrap">
     <div className="glass rounded-2xl p-8 space-y-6">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-bold">Nova senha</h1>
@@ -144,6 +149,7 @@ function ResetPasswordPageInner() {
           {loading ? "Salvando…" : "Redefinir senha"}
         </Button>
       </form>
+    </div>
     </div>
   )
 }

@@ -74,6 +74,7 @@ function VerifyEmailPageInner() {
   }
 
   return (
+    <div className="auth-simple-wrap">
     <div className="glass rounded-2xl p-8 space-y-6 text-center">
       <div className="space-y-2">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/20 mb-2">
@@ -87,7 +88,7 @@ function VerifyEmailPageInner() {
       </div>
 
       {/* OTP inputs */}
-      <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+      <div className="flex gap-1.5 sm:gap-2 justify-center" onPaste={handlePaste}>
         {otp.map((digit, i) => (
           <input
             key={i}
@@ -98,7 +99,7 @@ function VerifyEmailPageInner() {
             value={digit}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-11 h-14 text-center text-xl font-bold rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+            className="w-10 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
           />
         ))}
       </div>
@@ -125,6 +126,7 @@ function VerifyEmailPageInner() {
           </button>
         )}
       </div>
+    </div>
     </div>
   )
 }

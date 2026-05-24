@@ -615,8 +615,39 @@ textarea.input { height: auto; min-height: 120px; padding: 12px 14px; line-heigh
 .grid-10q   { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 
 /* Auth split layout */
-.auth-split { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; background: var(--background); }
+.auth-split { display: grid; grid-template-columns: 1fr 1fr; min-height: 100dvh; background: var(--background); }
 .auth-left  { position: relative; overflow: hidden; }
+
+/* Auth right panel (responsive form panel) */
+.auth-right-panel {
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  min-height: 100dvh;
+}
+.auth-toplink {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  z-index: 2;
+}
+.auth-form-inner {
+  width: 100%;
+  max-width: 380px;
+}
+
+/* Auth simple pages (forgot-password, register, reset, verify) */
+.auth-simple-wrap {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
 
 /* ─── Responsive breakpoints ──────────────────────────────────── */
 @media (max-width: 1024px) {
@@ -638,6 +669,7 @@ textarea.input { height: auto; min-height: 120px; padding: 12px 14px; line-heigh
     padding-bottom: 16px;
   }
   .page-header > .row { flex-wrap: wrap; }
+  .page-title { font-size: 22px; }
 
   /* Grids collapse to single column */
   .grid-2, .grid-3, .grid-12, .grid-14, .grid-14r, .grid-15 {
@@ -653,15 +685,74 @@ textarea.input { height: auto; min-height: 120px; padding: 12px 14px; line-heigh
   .auth-split { grid-template-columns: 1fr; }
   .auth-left  { display: none; }
 
+  /* Auth right panel mobile */
+  .auth-right-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 24px 20px 40px;
+    min-height: 100dvh;
+  }
+  .auth-toplink {
+    position: static;
+    text-align: right;
+    font-size: 13px;
+    margin-bottom: 24px;
+    align-self: flex-end;
+  }
+  .auth-form-inner {
+    max-width: none;
+    flex: 1;
+  }
+
+  /* Auth simple pages */
+  .auth-simple-wrap {
+    align-items: flex-start;
+    padding-top: 40px;
+  }
+  .auth-simple-wrap > .glass {
+    border-radius: 16px;
+    padding: 24px 20px;
+  }
+
   /* Tab bars scroll horizontally on mobile */
   .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
 
   /* Sidebar fills safely on mobile */
   .sidebar { width: 280px; max-width: 88vw; }
+
+  /* Buttons row in page header wraps */
+  .page-header .row { flex-wrap: wrap; gap: 8px; }
+
+  /* Answer rows on mobile */
+  .answer-row { padding: 12px 14px; font-size: 13px; }
+  .answer-row .letter { height: 28px; width: 28px; border-radius: 8px; font-size: 12px; }
 }
 
 @media (max-width: 480px) {
   .grid-4 { grid-template-columns: 1fr 1fr; }
+
+  /* Tighter page padding on very small phones */
+  .page-inner { padding: 12px 12px 84px; }
+
+  /* Smaller page title */
+  .page-title { font-size: 20px; }
+
+  /* Auth simple pages: full bleed on tiny phones */
+  .auth-simple-wrap {
+    padding: 20px 12px 32px;
+    align-items: stretch;
+  }
+  .auth-simple-wrap > .glass { border-radius: 12px; padding: 20px 16px; }
+
+  /* Auth form on tiny phones */
+  .auth-right-panel { padding: 20px 16px 32px; }
+
+  /* Cards slightly less padding on tiny phones */
+  .card { border-radius: 12px; }
+
+  /* Hide less important stat text */
+  .grid-10q { grid-template-columns: repeat(5, 1fr); gap: 3px; }
 }
 
 /* Animations */

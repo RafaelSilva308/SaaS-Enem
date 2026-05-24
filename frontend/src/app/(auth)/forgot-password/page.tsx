@@ -41,6 +41,7 @@ export default function ForgotPasswordPage() {
 
   if (sent) {
     return (
+      <div className="auth-simple-wrap">
       <div className="glass rounded-2xl p-8 space-y-4 text-center">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-secondary/20 mb-2">
           <Send size={28} className="text-secondary" />
@@ -56,10 +57,12 @@ export default function ForgotPasswordPage() {
           </Button>
         </Link>
       </div>
+      </div>
     )
   }
 
   return (
+    <div className="auth-simple-wrap">
     <div className="glass rounded-2xl p-8 space-y-6">
       <div className="text-center space-y-1">
         <h1 className="text-2xl font-bold">Esqueceu sua senha?</h1>
@@ -97,6 +100,7 @@ export default function ForgotPasswordPage() {
       >
         <ArrowLeft size={14} /> Voltar para o login
       </Link>
+    </div>
     </div>
   )
 }

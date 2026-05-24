@@ -152,15 +152,15 @@ function LoginPageInner() {
       </div>
 
       {/* Right form panel */}
-      <div style={{ display: "grid", placeItems: "center", padding: 40, position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 24, right: 32, fontSize: 12.5, color: "var(--muted-foreground)" }}>
+      <div className="auth-right-panel">
+        <div className="auth-toplink">
           Sem conta?{" "}
           <Link href="/register" style={{ color: "var(--brand-blue-light)", fontWeight: 500, cursor: "pointer", textDecoration: "none" }}>
             Criar gratuitamente →
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="col stagger" style={{ width: "100%", maxWidth: 380, gap: 16 }}>
+        <form onSubmit={handleSubmit(onSubmit)} className="col stagger auth-form-inner" style={{ gap: 16 }}>
           <div className="col" style={{ gap: 8, marginBottom: 8 }}>
             <span className="badge badge-primary" style={{ alignSelf: "flex-start" }}>Acesso Pro</span>
             <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1.1 }}>Bem-vindo de volta</h1>
