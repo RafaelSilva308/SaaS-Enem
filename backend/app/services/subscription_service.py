@@ -305,8 +305,8 @@ async def _create_stripe_subscription(
     session.add(sub)
     await session.commit()
 
-    invoice = stripe_sub.get("latest_invoice", {})
-    payment_intent = invoice.get("payment_intent", {}) if invoice else {}
+    invoice = stripe_sub.get("latest_invoice") or {}
+    payment_intent = (invoice.get("payment_intent") or {}) if invoice else {}
 
     if data.payment_method == "pix":
         pix_data = payment_intent.get("next_action", {}).get("pix_display_qr_code", {})
