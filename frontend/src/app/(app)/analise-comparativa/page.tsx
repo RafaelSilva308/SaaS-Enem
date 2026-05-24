@@ -175,7 +175,7 @@ export default function AnáliseComparativaPage() {
         </div>
 
         {/* Insights cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div className="grid-3" style={{ gap: 12, marginBottom: 20 }}>
           {insights.map((c, i) => {
             const Icon = c.icon
             const [bg, brd, fg] = bgMap[c.color]
@@ -326,7 +326,7 @@ export default function AnáliseComparativaPage() {
               </div>
               <TrendingUp size={16} style={{ color: "var(--primary)" }} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="grid-2">
               {SUBJECTS.map(subj => (
                 <div key={subj}>
                   <div className="row" style={{ gap: 8, marginBottom: 10 }}>

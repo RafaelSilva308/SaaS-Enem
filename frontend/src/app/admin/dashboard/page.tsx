@@ -241,7 +241,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* KPI grid — 6 cols */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div className="grid-6" style={{ marginBottom: 20 }}>
           {kpis.map((k, i) => {
             const Ico = k.icon
             const isUp = k.trend >= 0
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Growth chart + real-time logs */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div className="grid-15" style={{ marginBottom: 20 }}>
           {/* Stacked area chart */}
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 18 }}>

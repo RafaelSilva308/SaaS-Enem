@@ -245,7 +245,7 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
               <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(245,158,11,0.25)", border: "1px solid rgba(245,158,11,0.5)" }} />Marcada</div>
               <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(30,41,59,0.7)", border: "1px solid var(--border-strong)" }} />Pendente</div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: 4 }}>
+            <div className="grid-10q">
               {questions.map((q, i) => {
                 const isAnswered = q.id in answers
                 const isMarked = marked.has(q.id)

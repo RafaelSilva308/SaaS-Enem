@@ -154,7 +154,7 @@ export default function EssayResultPage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Two columns: text + competencies */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}>
+        <div className="grid-14">
           {/* Annotated text */}
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 14 }}>

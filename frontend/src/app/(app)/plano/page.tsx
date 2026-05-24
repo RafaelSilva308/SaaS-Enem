@@ -267,7 +267,7 @@ export default function PlanoPage() {
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(14, 1fr)", gap: 6 }}>
+          <div style={{ overflowX: "auto" }}><div style={{ display: "grid", gridTemplateColumns: "repeat(14, 1fr)", gap: 6, minWidth: 560 }}>
             {daySlots.map((d, i) => {
               const pct = d.total ? d.done / d.total : 0
               const isPast = i < 7 && !d.today
@@ -288,7 +288,7 @@ export default function PlanoPage() {
                 </div>
               )
             })}
-          </div>
+          </div></div>
         </div>
 
         {/* View tabs */}
@@ -444,7 +444,7 @@ export default function PlanoPage() {
         )}
 
         {/* Distribution + AI card */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}>
+        <div className="grid-14">
           <div className="card" style={{ padding: 24 }}>
             <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", marginBottom: 16 }}>Distribuição até o ENEM</h3>
             <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginBottom: 12 }}>{daysLeft} dias restantes</div>

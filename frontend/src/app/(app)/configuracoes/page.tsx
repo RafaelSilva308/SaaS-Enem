@@ -77,7 +77,7 @@ export default function ConfiguracoesPage() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 24 }}>
+        <div className="grid-sidebar">
           {/* Sidebar nav */}
           <div className="col" style={{ gap: 4 }}>
             {SECTIONS.map((s) => {
@@ -111,7 +111,7 @@ export default function ConfiguracoesPage() {
                     </div>
                     <button className="btn btn-secondary btn-sm">Trocar</button>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <div className="grid-2" style={{ gap: 14 }}>
                     {[
                       { label: "Nome completo", value: user?.name ?? "" },
                       { label: "Email", value: user?.email ?? "" },
@@ -191,7 +191,7 @@ export default function ConfiguracoesPage() {
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                <div className="grid-3" style={{ gap: 12 }}>
                   {[
                     { name: "Gratuito", price: "R$ 0", suffix: "/mês", features: ["50 questões/mês", "1 redação/mês", "Plano básico"], current: false },
                     { name: "Pro Mensal", price: "R$ 59,90", suffix: "/mês", features: ["Questões ilimitadas", "Redações ilimitadas", "Análise IA", "Simulados completos"], current: false },

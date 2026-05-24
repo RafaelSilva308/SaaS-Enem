@@ -81,7 +81,7 @@ export default function GamificacaoPage() {
         </div>
 
         {/* Level ring + streak */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div className="grid-12" style={{ marginBottom: 20 }}>
           {/* Level */}
           <div className="card" style={{ padding: 24, position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", inset: 0, background: "radial-gradient(50% 70% at 20% 0%, rgba(124,58,237,0.18), transparent 60%)" }} />
@@ -168,7 +168,7 @@ export default function GamificacaoPage() {
             </div>
             <span className="badge badge-amber">0/3 concluídas</span>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+          <div className="grid-3" style={{ gap: 12 }}>
             {DAILY_MISSIONS.map((m, i) => {
               const pct = (m.done / m.total) * 100
               const Icon = m.icon
@@ -195,7 +195,7 @@ export default function GamificacaoPage() {
         </div>
 
         {/* Ranking + Badges */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 16 }}>
+        <div className="grid-14r">
           {/* Leaderboard */}
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 16 }}>
@@ -243,7 +243,7 @@ export default function GamificacaoPage() {
                 ))}
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+            <div className="grid-5">
               {filteredBadges.map((b, i) => {
                 const tierColor = TIER_COLORS[b.tier] ?? "#94a3b8"
                 const glowClass = b.unlocked ? (BADGE_GLOWS[b.tier] ?? "") : ""

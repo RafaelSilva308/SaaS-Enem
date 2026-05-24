@@ -119,7 +119,7 @@ export default function DesempenhoPage() {
 
         {/* Stat row */}
         {overview && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 20 }}>
+          <div className="grid-4" style={{ marginBottom: 20 }}>
             {[
               { icon: Target, label: "Pontuação simulada", value: pred?.projected_score ? String(pred.projected_score) : `${overview.accuracy_rate.toFixed(0)}%`, trend: 5.4, color: "blue", mini: <Sparkline data={histScores.length > 1 ? histScores : [0, 1]} color="#60a5fa" /> },
               { icon: CheckCircle2, label: "Taxa de acerto", value: `${overview.accuracy_rate.toFixed(1)}`, suffix: "%", trend: 4.2, color: "green", mini: <div style={{ fontSize: 11.5, color: "var(--muted-foreground)" }}>{overview.questions_answered} questões respondidas</div> },
@@ -171,7 +171,7 @@ export default function DesempenhoPage() {
 
         {/* Por matéria */}
         {tab === "materia" && comp && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16, marginBottom: 20 }}>
+          <div className="grid-14" style={{ marginBottom: 20 }}>
             <div className="card" style={{ padding: 24 }}>
               <div className="row between" style={{ marginBottom: 16 }}>
                 <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Detalhamento por matéria</h3>

@@ -59,9 +59,9 @@ function LoginPageInner() {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", height: "100vh", background: "var(--background)" }}>
+    <div className="auth-split">
       {/* Left visual panel */}
-      <div style={{ position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #0a1226 0%, #1a0b2e 100%)" }}>
+      <div className="auth-left" style={{ background: "linear-gradient(135deg, #0a1226 0%, #1a0b2e 100%)" }}>
         <div className="aurora-blob" style={{ width: 480, height: 480, background: "#2563eb", top: "-100px", left: "-100px" }} />
         <div className="aurora-blob" style={{ width: 380, height: 380, background: "#7c3aed", bottom: "-80px", right: "-80px", animationDelay: "3s" }} />
         <div className="aurora-blob" style={{ width: 280, height: 280, background: "#10b981", top: "45%", left: "30%", opacity: 0.25, animationDelay: "6s" }} />

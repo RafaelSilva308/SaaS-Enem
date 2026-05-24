@@ -145,7 +145,7 @@ function EscreverPageInner() {
       </div>
 
       {/* Body — split */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "0.38fr 0.62fr", overflow: "hidden" }}>
+      <div className="grid-editor" style={{ flex: 1, overflow: "hidden" }}>
         {/* Theme panel */}
         <div style={{ overflowY: "auto", padding: "28px 32px", borderRight: "1px solid var(--border)", background: "rgba(15, 23, 42, 0.3)" }}>
           <span className="badge badge-premium" style={{ marginBottom: 12 }}>✦ Tema oficial</span>

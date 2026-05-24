@@ -88,7 +88,7 @@ export default function RedacaoPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div className="grid-4" style={{ gap: 12, marginBottom: 24 }}>
           {[
             { label: "Entregues", value: String(essays.length), color: undefined },
             { label: "Nota média", value: avgScore > 0 ? String(avgScore) : "—", green: true, icon: TrendingUp },
@@ -142,7 +142,7 @@ export default function RedacaoPage() {
 
         {/* Temas grid */}
         {tab === "temas" && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+          <div className="grid-2" style={{ gap: 12 }}>
             {themes.map((t) => (
               <button key={t.id} onClick={() => handleSelectTheme(t)} className="card card-hover" style={{ padding: 20, textAlign: "left", cursor: "pointer", fontFamily: "'Outfit', system-ui", color: "inherit", display: "block", width: "100%" }}>
                 <div className="row between" style={{ marginBottom: 10 }}>

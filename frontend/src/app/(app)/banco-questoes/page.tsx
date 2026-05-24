@@ -210,7 +210,7 @@ export default function BancoQuestoesPage() {
           </div>
         ) : (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+            <div className="grid-2" style={{ gap: 12, marginBottom: 24 }}>
               {data.questions.map(q => {
                 const hasCorrect = q.stat && q.stat.correct > 0
                 const hasWrong = q.stat && q.stat.wrong > 0 && !hasCorrect
@@ -258,7 +258,7 @@ export default function BancoQuestoesPage() {
 
             {/* Skeleton for "load more" feel */}
             {tab === "all" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+              <div className="grid-2" style={{ gap: 12, marginBottom: 24 }}>
                 {[1, 2].map(i => (
                   <div key={i} className="card" style={{ padding: 18, opacity: 0.4 }}>
                     <div className="row" style={{ gap: 8, marginBottom: 12 }}>

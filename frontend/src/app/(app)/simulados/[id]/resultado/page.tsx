@@ -161,7 +161,7 @@ export default function ResultadoPage({ params }: { params: Promise<{ id: string
         </div>
 
         {/* Charts row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 16, marginBottom: 20 }}>
+        <div className="grid-12" style={{ marginBottom: 20 }}>
           {/* Radar */}
           {radarData.length >= 3 && (
             <div className="card" style={{ padding: 24 }}>

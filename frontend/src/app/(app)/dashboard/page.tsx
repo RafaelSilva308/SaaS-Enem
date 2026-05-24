@@ -302,7 +302,7 @@ export default function DashboardPage() {
         )}
 
         {/* Greeting */}
-        <div className="row between" style={{ marginBottom: 28 }}>
+        <div className="row between" style={{ marginBottom: 28, flexWrap: "wrap", gap: 12 }}>
           <div className="col">
             <div className="row" style={{ gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 24 }}>☀️</span>
@@ -331,7 +331,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
+        <div className="grid-4" style={{ marginBottom: 24 }}>
           <StatCard
             icon={Flame} label="Streak" value={String(currentStreak)} suffix="dias" trend={12} color="amber"
             mini={
@@ -367,7 +367,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Two-column: progress + donut */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="grid-2" style={{ marginBottom: 24 }}>
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 16 }}>
               <div>
@@ -414,7 +414,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Today sessions + Quick actions */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16, marginBottom: 24 }}>
+        <div className="grid-14" style={{ marginBottom: 24 }}>
           {/* Recommendation / today */}
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 16 }}>
@@ -475,7 +475,7 @@ export default function DashboardPage() {
             <div className="row between" style={{ marginBottom: 16 }}>
               <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Ações rápidas</h3>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <div className="grid-2" style={{ gap: 10 }}>
               {quickActions.map((a, i) => {
                 const c = actionColors[a.color]
                 const Ic = a.icon
@@ -504,7 +504,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Achievements + AI Insight */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}>
+        <div className="grid-14">
           <div className="card" style={{ padding: 24 }}>
             <div className="row between" style={{ marginBottom: 16 }}>
               <div>

@@ -84,7 +84,7 @@ export default function SimuladosPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div className="grid-4" style={{ gap: 12, marginBottom: 24 }}>
           {[
             { label: "Realizados", value: String(completed.length) },
             { label: "Melhor nota", value: bestScore > 0 ? String(bestScore) : "—", green: true },
@@ -148,7 +148,7 @@ export default function SimuladosPage() {
                   <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Realizados</h3>
                   <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>Últimos realizados</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
+                <div className="grid-3" style={{ gap: 12, marginBottom: 24 }}>
                   {completed.map(exam => {
                     const typeLabel = EXAM_TYPE_LABELS[exam.exam_type] ?? exam.exam_type
                     const subjectBadge = exam.subject ? SUBJECT_BADGES[exam.subject] : null
@@ -192,7 +192,7 @@ export default function SimuladosPage() {
                 <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", marginBottom: 12 }}>
                   {tabFilter === "agenda" ? "Agendados" : "Disponíveis"}
                 </h3>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
+                <div className="grid-2" style={{ gap: 12 }}>
                   {pending.map(exam => {
                     const typeLabel = EXAM_TYPE_LABELS[exam.exam_type] ?? exam.exam_type
                     const isStarted = exam.status === "started"
