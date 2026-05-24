@@ -336,10 +336,7 @@ async def _create_stripe_subscription(
 
 def _to_status_response(sub: Subscription) -> SubscriptionStatusResponse:
     now = utcnow()
-    # sub.end_date pode ser naive; normalizar
-    end = sub.end_date
-    if end.tzinfo is None:
-        end = end.replace(tzinfo=timezone.utc)
+    end = sub.end_date.replace(tzinfo=None) if sub.end_date.tzinfo else sub.end_date
     days_left = max(0, (end - now).days)
 
     return SubscriptionStatusResponse(
@@ -434,8 +431,8 @@ async def process_webhook_with_db(payload: bytes, sig_header: str, session: Asyn
             sub.status = status_map.get(stripe_status, stripe_status)
             if stripe_status == "active" and data_obj.get("current_period_end"):
                 from datetime import datetime
-                sub.end_date = datetime.fromtimestamp(
-                    data_obj["current_period_end"], tz=timezone.utc
+                sub.end_date = datetime.utcfromtimestamp(
+                    data_obj["current_period_end"]
                 )
             session.add(sub)
             await session.commit()

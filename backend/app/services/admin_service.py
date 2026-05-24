@@ -55,7 +55,7 @@ async def get_metrics(session: AsyncSession) -> AdminMetricsOut:
     now = _now()
     thirty_ago = now - timedelta(days=30)
     today = date.today()
-    today_start = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
+    today_start = datetime(today.year, today.month, today.day)
     today_end = today_start + timedelta(days=1)
 
     # Total users (not deleted)
