@@ -65,12 +65,15 @@ async def _send_email(to: str, subject: str, html: str) -> None:
     if not settings.RESEND_API_KEY or settings.APP_ENV == "development":
         print(f"[EMAIL DEV] To: {to} | Subject: {subject}")
         return
-    resend.Emails.send({
-        "from": settings.EMAIL_FROM,
-        "to": [to],
-        "subject": subject,
-        "html": html,
-    })
+    try:
+        resend.Emails.send({
+            "from": settings.EMAIL_FROM,
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        })
+    except Exception as exc:
+        print(f"[EMAIL ERROR] Failed to send to {to}: {exc}")
 
 
 # ── register ─────────────────────────────────────────────────────
