@@ -24,7 +24,7 @@ langchain-openai==0.2.11
 langchain-google-genai==2.0.7
 
 # ─── Email ───────────────────────────────────────────
-resend==2.5.0
+resend==2.5.1
 
 # ─── Payments ────────────────────────────────────────
 stripe==11.4.1
