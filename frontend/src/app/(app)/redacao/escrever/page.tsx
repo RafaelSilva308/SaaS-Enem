@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ChevronLeft, Check, Clock, Send, Loader2, Sparkles } from "lucide-react"
 import { toast } from "sonner"
@@ -11,7 +11,7 @@ interface ThemeData { id: string; title: string; description: string | null; yea
 
 const MIN_LINES = 7, MAX_LINES = 30
 
-export default function EscreverPage() {
+function EscreverPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const essayId = searchParams.get("essayId")
@@ -216,5 +216,13 @@ export default function EscreverPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function EscreverPage() {
+  return (
+    <Suspense>
+      <EscreverPageInner />
+    </Suspense>
   )
 }

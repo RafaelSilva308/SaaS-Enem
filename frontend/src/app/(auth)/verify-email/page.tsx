@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Loader2, MailCheck, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
-export default function VerifyEmailPage() {
+function VerifyEmailPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get("email") ?? ""
@@ -126,5 +126,13 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailPageInner />
+    </Suspense>
   )
 }

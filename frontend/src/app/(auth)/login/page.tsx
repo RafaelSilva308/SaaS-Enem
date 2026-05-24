@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -25,7 +25,7 @@ const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
   opacity: 0.2 + ((i * 17) % 60) / 100,
 }))
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get("redirect") ?? "/app/dashboard"
@@ -281,5 +281,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageInner />
+    </Suspense>
   )
 }
