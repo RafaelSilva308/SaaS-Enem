@@ -9,13 +9,19 @@ from app.db.engine import get_session
 from app.services.auth_service import get_current_user as _get_current_user
 from app.models.models import Subscription, User
 
-bearer = HTTPBearer()
+bearer = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
     session: AsyncSession = Depends(get_session),
 ) -> User:
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de autenticação ausente",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return await _get_current_user(credentials.credentials, session)
 
 
