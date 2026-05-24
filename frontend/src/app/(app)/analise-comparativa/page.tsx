@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -75,7 +75,7 @@ export default function AnáliseComparativaPage() {
               A Análise Comparativa está disponível para assinantes Premium. Compare seu desempenho com as médias do ENEM e outros estudantes.
             </p>
           </div>
-          <button className="btn btn-brand btn-lg" onClick={() => router.push("/app/configuracoes/billing")}>
+          <button className="btn btn-brand btn-lg" onClick={() => router.push("/configuracoes/billing")}>
             <Crown size={14} /> Assinar Premium
           </button>
         </div>
@@ -186,7 +186,7 @@ export default function AnáliseComparativaPage() {
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>{c.title}</div>
                 <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5, marginBottom: 12 }}>{c.desc}</div>
-                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/plano")}>{c.action} →</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/plano")}>{c.action} →</button>
               </div>
             )
           })}
@@ -310,7 +310,7 @@ export default function AnáliseComparativaPage() {
                 </div>
               ))}
             </div>
-            <button className="btn btn-secondary btn-sm" style={{ marginTop: 16, width: "100%" }} onClick={() => router.push("/app/plano")}>
+            <button className="btn btn-secondary btn-sm" style={{ marginTop: 16, width: "100%" }} onClick={() => router.push("/plano")}>
               <BookOpen size={13} /> Ver no Plano de Estudos
             </button>
           </div>

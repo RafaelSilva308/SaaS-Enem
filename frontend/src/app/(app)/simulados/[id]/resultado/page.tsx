@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -116,7 +116,7 @@ export default function ResultadoPage({ params }: { params: Promise<{ id: string
       <div className="page-inner stagger">
         {/* Breadcrumb */}
         <div className="row" style={{ gap: 10, marginBottom: 18 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/app/simulados")}>
+          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/simulados")}>
             <ChevronLeft size={13} /> Voltar
           </button>
           <span style={{ fontSize: 12.5, color: "var(--muted-foreground)" }}>Simulados → Resultado</span>
@@ -147,7 +147,7 @@ export default function ResultadoPage({ params }: { params: Promise<{ id: string
               </div>
               <div className="row" style={{ gap: 8, marginTop: 12 }}>
                 <button className="btn btn-secondary btn-sm" onClick={handleShare}><Share2 size={12} /> Compartilhar</button>
-                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/simulados")}><RefreshCw size={12} /> Novo simulado</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/simulados")}><RefreshCw size={12} /> Novo simulado</button>
                 <button className="btn btn-primary btn-sm"><FileText size={12} /> Relatório PDF</button>
               </div>
             </div>

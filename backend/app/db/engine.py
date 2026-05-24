@@ -9,8 +9,12 @@ _is_sqlite = settings.DATABASE_URL.startswith("sqlite")
 engine: AsyncEngine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.APP_ENV == "development",
-    # SQLite não suporta pool de conexões — PostgreSQL usa pool padrão
-    **({} if _is_sqlite else {"pool_size": 5, "max_overflow": 10, "pool_timeout": 30}),
+    **({} if _is_sqlite else {
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_pre_ping": True,  # reconecta se Neon fechar conexão ociosa
+    }),
     connect_args={"check_same_thread": False} if _is_sqlite else {},
 )
 

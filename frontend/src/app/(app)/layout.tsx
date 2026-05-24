@@ -32,10 +32,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace("/login")
       return
     }
-    if (pathname !== "/app/onboarding") {
+    if (pathname !== "/onboarding") {
       api.get("/diagnostic/status")
         .then(({ data }) => {
-          if (!data.has_completed) router.replace("/app/onboarding")
+          if (!data.has_completed) router.replace("/onboarding")
         })
         .catch((err) => {
           if (err.response?.status === 401) {
@@ -47,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [mounted, isAuthenticated, pathname, clearAuth, router])
 
   const fetchGamification = useCallback(async () => {
-    if (!isAuthenticated || pathname === "/app/onboarding") return
+    if (!isAuthenticated || pathname === "/onboarding") return
     try {
       const { data } = await api.get("/gamification/me")
       setGamification(data)
@@ -55,7 +55,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, pathname, setGamification])
 
   const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated || pathname === "/app/onboarding") return
+    if (!isAuthenticated || pathname === "/onboarding") return
     try {
       const { data } = await api.get("/notifications/unread-count")
       setUnreadCount(data.count ?? 0)
@@ -63,7 +63,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, pathname])
 
   useEffect(() => {
-    if (!mounted || !isAuthenticated || pathname === "/app/onboarding") return
+    if (!mounted || !isAuthenticated || pathname === "/onboarding") return
     fetchUnreadCount()
     fetchGamification()
     gamPollRef.current = setInterval(() => {
@@ -92,7 +92,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (pathname === "/app/onboarding") {
+  if (pathname === "/onboarding") {
     return <>{children}</>
   }
 

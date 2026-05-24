@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -184,7 +184,7 @@ export default function ConfiguracoesPage() {
                       <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>Trial · 7 dias gratuitos</div>
                     </div>
                     <div className="col" style={{ gap: 8 }}>
-                      <Link href="/app/configuracoes/billing">
+                      <Link href="/configuracoes/billing">
                         <button className="btn btn-secondary btn-sm">Gerenciar pagamento</button>
                       </Link>
                     </div>
@@ -214,7 +214,7 @@ export default function ConfiguracoesPage() {
                       {p.current ? (
                         <button className="btn btn-secondary" style={{ width: "100%" }} disabled>Plano atual</button>
                       ) : (
-                        <Link href="/app/configuracoes/billing">
+                        <Link href="/configuracoes/billing">
                           <button className="btn btn-brand" style={{ width: "100%" }}>Mudar para este</button>
                         </Link>
                       )}

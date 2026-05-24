@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { use, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -74,7 +74,7 @@ export default function EssayResultPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     fetchEssay()
-      .catch(() => { toast.error("Redação não encontrada"); router.push("/app/redacao") })
+      .catch(() => { toast.error("Redação não encontrada"); router.push("/redacao") })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -100,7 +100,7 @@ export default function EssayResultPage({ params }: { params: Promise<{ id: stri
     return (
       <div className="page-scroll">
         <div className="page-inner" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 20, textAlign: "center" }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/app/redacao")} style={{ alignSelf: "flex-start" }}>
+          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/redacao")} style={{ alignSelf: "flex-start" }}>
             <ChevronLeft size={13} /> Voltar
           </button>
           <div className="card" style={{ padding: 48, maxWidth: 480, width: "100%" }}>
@@ -121,7 +121,7 @@ export default function EssayResultPage({ params }: { params: Promise<{ id: stri
       <div className="page-inner stagger">
         {/* Breadcrumb */}
         <div className="row" style={{ gap: 10, marginBottom: 18 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/app/redacao")}>
+          <button className="btn btn-ghost btn-sm" onClick={() => router.push("/redacao")}>
             <ChevronLeft size={13} /> Voltar
           </button>
           <span style={{ fontSize: 12.5, color: "var(--muted-foreground)" }}>Redação → Ver correção</span>

@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "ENEM Pro",
     short_name: "ENEM Pro",
     description: "Sua aprovação começa aqui — plano de estudos, simulados e redação com IA",
-    start_url: "/app/dashboard",
+    start_url: "/dashboard",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
@@ -30,12 +30,12 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: "Plano de Estudos",
-        url: "/app/plano",
+        url: "/plano",
         description: "Acesse seu plano semanal",
       },
       {
         name: "Novo Simulado",
-        url: "/app/simulados",
+        url: "/simulados",
         description: "Iniciar um simulado",
       },
     ],

@@ -28,7 +28,7 @@ const PARTICLES = Array.from({ length: 30 }, (_, i) => ({
 function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get("redirect") ?? "/app/dashboard"
+  const redirect = searchParams.get("redirect") ?? "/dashboard"
   const { setAuth } = useAuthStore()
 
   const [showPassword, setShowPassword] = useState(false)

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -509,7 +509,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     api.get("/diagnostic/status")
       .then(({ data }) => {
-        if (data.has_completed) router.replace("/app/dashboard")
+        if (data.has_completed) router.replace("/dashboard")
       })
       .catch((err) => {
         // Sem banco configurado (dev local) — deixa o usuário completar o onboarding
@@ -552,7 +552,7 @@ export default function OnboardingPage() {
   async function handleFinish() {
     // Stage 1.3 implementará a criação real da assinatura via Asaas
     // Por enquanto redireciona direto para o dashboard
-    router.replace("/app/dashboard")
+    router.replace("/dashboard")
   }
 
   return (

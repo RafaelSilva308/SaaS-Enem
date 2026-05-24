@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useCallback, useEffect, useRef, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -29,7 +29,7 @@ function EscreverPageInner() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    if (!essayId) { router.push("/app/redacao"); return }
+    if (!essayId) { router.push("/redacao"); return }
     api.get(`/essays/${essayId}`)
       .then(({ data }) => {
         setEssay(data); setText(data.text || "")
@@ -40,7 +40,7 @@ function EscreverPageInner() {
           }).catch(() => {})
         }
       })
-      .catch(() => { toast.error("Redação não encontrada"); router.push("/app/redacao") })
+      .catch(() => { toast.error("Redação não encontrada"); router.push("/redacao") })
       .finally(() => setLoading(false))
   }, [essayId, router])
 
@@ -107,7 +107,7 @@ function EscreverPageInner() {
       {/* Topbar */}
       <div className="row between" style={{ padding: "14px 28px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)" }}>
         <div className="row" style={{ gap: 14 }}>
-          <button className="btn btn-icon" onClick={() => router.push("/app/redacao")}><ChevronLeft size={15} /></button>
+          <button className="btn btn-icon" onClick={() => router.push("/redacao")}><ChevronLeft size={15} /></button>
           <div className="col" style={{ lineHeight: 1.2 }}>
             <div style={{ fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>REDAÇÃO · TEMA DO DIA</div>
             <div style={{ fontSize: 14, fontWeight: 600, maxWidth: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

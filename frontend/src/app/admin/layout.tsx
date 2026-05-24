@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
@@ -24,7 +24,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!mounted) return
     if (!isAuthenticated) { router.replace("/login"); return }
-    if (user?.role !== "admin") { router.replace("/app/dashboard"); return }
+    if (user?.role !== "admin") { router.replace("/dashboard"); return }
   }, [mounted, isAuthenticated, user, router])
 
   if (!mounted || !isAuthenticated || user?.role !== "admin") {

@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Menu, Bell, LogOut, CreditCard, Check, Loader2 } from "lucide-react"
@@ -149,7 +149,7 @@ export function TopBar({ onMenuClick, notificationCount = 0, onUnreadChange }: P
 
             <div className="border-t border-border px-4 py-2.5">
               <button
-                onClick={() => { setBellOpen(false); router.push("/app/notificacoes") }}
+                onClick={() => { setBellOpen(false); router.push("/notificacoes") }}
                 className="text-xs text-primary hover:text-primary/80 w-full text-center transition-colors"
               >
                 Ver todas as notificações →
@@ -178,7 +178,7 @@ export function TopBar({ onMenuClick, notificationCount = 0, onUnreadChange }: P
                 <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
               <button
-                onClick={() => { router.push("/app/configuracoes/billing"); setDropdownOpen(false) }}
+                onClick={() => { router.push("/configuracoes/billing"); setDropdownOpen(false) }}
                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-foreground hover:bg-muted/40 transition-colors"
               >
                 <CreditCard size={14} />

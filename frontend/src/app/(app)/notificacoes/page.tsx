@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useCallback } from "react"
 import { Bell, CheckCheck, Loader2, Settings, PenTool, Trophy, Target, Sparkles, Users, CheckCircle2 } from "lucide-react"
@@ -104,7 +104,7 @@ export default function NotificacoesPage() {
             <button className="btn btn-ghost btn-sm" onClick={markAllRead} disabled={unreadCount === 0}>
               Marcar todas como lidas
             </button>
-            <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/configuracoes")}>
+            <button className="btn btn-secondary btn-sm" onClick={() => router.push("/configuracoes")}>
               <Settings size={13} /> Preferências
             </button>
           </div>

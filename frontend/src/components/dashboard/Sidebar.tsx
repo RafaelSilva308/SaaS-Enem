@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -27,26 +27,26 @@ const groups: NavGroup[] = [
   {
     label: "Estudo",
     items: [
-      { href: "/app/dashboard",      icon: Home,      label: "Dashboard" },
-      { href: "/app/plano",          icon: Calendar,  label: "Plano de Estudos" },
-      { href: "/app/banco-questoes", icon: BookOpen,  label: "Banco de Questões" },
-      { href: "/app/simulados",      icon: Target,    label: "Simulados" },
-      { href: "/app/redacao",        icon: PenTool,   label: "Redação" },
+      { href: "/dashboard",      icon: Home,      label: "Dashboard" },
+      { href: "/plano",          icon: Calendar,  label: "Plano de Estudos" },
+      { href: "/banco-questoes", icon: BookOpen,  label: "Banco de Questões" },
+      { href: "/simulados",      icon: Target,    label: "Simulados" },
+      { href: "/redacao",        icon: PenTool,   label: "Redação" },
     ],
   },
   {
     label: "Progresso",
     items: [
-      { href: "/app/desempenho",          icon: BarChart2,  label: "Desempenho" },
-      { href: "/app/gamificacao",         icon: Trophy,     label: "Gamificação" },
-      { href: "/app/analise-comparativa", icon: Sparkles,   label: "Análise IA", premium: true },
+      { href: "/desempenho",          icon: BarChart2,  label: "Desempenho" },
+      { href: "/gamificacao",         icon: Trophy,     label: "Gamificação" },
+      { href: "/analise-comparativa", icon: Sparkles,   label: "Análise IA", premium: true },
     ],
   },
   {
     label: "Conta",
     items: [
-      { href: "/app/notificacoes",  icon: Bell,       label: "Notificações", dot: true },
-      { href: "/app/configuracoes", icon: Settings,   label: "Configurações" },
+      { href: "/notificacoes",  icon: Bell,       label: "Notificações", dot: true },
+      { href: "/configuracoes", icon: Settings,   label: "Configurações" },
       { href: "/admin/dashboard",   icon: ShieldCheck, label: "Admin", admin: true },
     ],
   },
@@ -117,7 +117,7 @@ export function Sidebar({ open, onClose, unreadCount = 0 }: Props) {
               <div className="sidebar-section-label">{g.label}</div>
               {g.items.map((item) => {
                 const Icon = item.icon
-                const active = pathname === item.href || (item.href !== "/app/dashboard" && pathname.startsWith(item.href))
+                const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
                 const hasUnread = item.dot && unreadCount > 0
                 return (
                   <Link
@@ -159,7 +159,7 @@ export function Sidebar({ open, onClose, unreadCount = 0 }: Props) {
         )}
 
         {/* User */}
-        <div className="sidebar-user" onClick={() => router.push("/app/configuracoes")}>
+        <div className="sidebar-user" onClick={() => router.push("/configuracoes")}>
           <div style={{ position: "relative" }}>
             <div className="avatar" style={{ height: 32, width: 32 }}>{initials}</div>
             <span style={{ position: "absolute", bottom: 0, right: 0, width: 8, height: 8, background: "#10b981", borderRadius: 999, border: "2px solid #0a1226" }} />

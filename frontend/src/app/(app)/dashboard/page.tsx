@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
@@ -259,10 +259,10 @@ export default function DashboardPage() {
   const weeklyHours = data.weekly_activity.slice(-7).map(d => d.hours)
 
   const quickActions = [
-    { icon: Brain,      label: "Questão rápida", desc: "1 questão aleatória", color: "blue",   href: "/app/banco-questoes" },
-    { icon: Target,     label: "Simulado",        desc: "Áreas + tempo",       color: "green",  href: "/app/simulados" },
-    { icon: CheckCircle2, label: "Redação",       desc: "Tema do dia",         color: "violet", href: "/app/redacao" },
-    { icon: Sparkles,   label: "Revisão IA",      desc: "Pontos fracos",       color: "violet", href: "/app/analise-comparativa" },
+    { icon: Brain,      label: "Questão rápida", desc: "1 questão aleatória", color: "blue",   href: "/banco-questoes" },
+    { icon: Target,     label: "Simulado",        desc: "Áreas + tempo",       color: "green",  href: "/simulados" },
+    { icon: CheckCircle2, label: "Redação",       desc: "Tema do dia",         color: "violet", href: "/redacao" },
+    { icon: Sparkles,   label: "Revisão IA",      desc: "Pontos fracos",       color: "violet", href: "/analise-comparativa" },
   ]
 
   const actionColors: Record<string, { bg: string; brd: string; fg: string }> = {
@@ -324,7 +324,7 @@ export default function DashboardPage() {
             <button className="btn btn-secondary" onClick={fetchDashboard}>
               <RefreshCw size={14} /> Atualizar
             </button>
-            <button className="btn btn-brand" onClick={() => router.push("/app/simulados")}>
+            <button className="btn btn-brand" onClick={() => router.push("/simulados")}>
               <Target size={14} /> Iniciar simulado
             </button>
           </div>
@@ -422,7 +422,7 @@ export default function DashboardPage() {
                 <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Recomendação de hoje</h3>
                 <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>IA · baseado no seu perfil</div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => router.push("/app/plano")}>
+              <button className="btn btn-ghost btn-sm" onClick={() => router.push("/plano")}>
                 Plano completo <ChevronRight size={12} />
               </button>
             </div>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
             ) : (
               <div className="col" style={{ alignItems: "center", padding: "20px 0", gap: 8 }}>
                 <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>Nenhuma recomendação disponível</div>
-                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/plano")}>Ver plano</button>
+                <button className="btn btn-secondary btn-sm" onClick={() => router.push("/plano")}>Ver plano</button>
               </div>
             )}
 
@@ -511,7 +511,7 @@ export default function DashboardPage() {
                 <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Conquistas recentes</h3>
                 <div style={{ fontSize: 12, color: "var(--muted-foreground)", marginTop: 2 }}>Últimas medalhas</div>
               </div>
-              <button className="btn btn-ghost btn-sm" onClick={() => router.push("/app/gamificacao")}>
+              <button className="btn btn-ghost btn-sm" onClick={() => router.push("/gamificacao")}>
                 Ver todas <ChevronRight size={12} />
               </button>
             </div>
@@ -552,7 +552,7 @@ export default function DashboardPage() {
               </p>
             )}
             <div className="row" style={{ gap: 8, position: "relative" }}>
-              <button className="btn btn-violet btn-sm" onClick={() => router.push("/app/plano")}>Aplicar ao plano</button>
+              <button className="btn btn-violet btn-sm" onClick={() => router.push("/plano")}>Aplicar ao plano</button>
             </div>
           </div>
         </div>

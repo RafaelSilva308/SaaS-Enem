@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { use, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -72,7 +72,7 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
       setMarked(new Set(data.marked_questions ?? []))
     } catch (err: any) {
       toast.error(err?.response?.data?.detail ?? "Erro ao iniciar simulado")
-      router.push("/app/simulados")
+      router.push("/simulados")
     } finally {
       setLoading(false)
     }
@@ -145,7 +145,7 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
       {/* Topbar */}
       <div className="row between" style={{ padding: "14px 28px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)" }}>
         <div className="row" style={{ gap: 14 }}>
-          <button className="btn btn-icon" onClick={() => router.push("/app/simulados")}><X size={15} /></button>
+          <button className="btn btn-icon" onClick={() => router.push("/simulados")}><X size={15} /></button>
           <div className="col" style={{ lineHeight: 1.2 }}>
             <div style={{ fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>SIMULADO</div>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Questão {currentIndex + 1} de {questions.length}</div>

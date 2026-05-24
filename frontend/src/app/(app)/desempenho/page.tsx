@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useEffect, useState } from "react"
 import { Loader2, Target, CheckCircle2, Clock, Zap, FileText, RefreshCw, ChevronDown } from "lucide-react"
@@ -287,7 +287,7 @@ export default function DesempenhoPage() {
                     <div style={{ fontSize: 14, fontWeight: 600 }}>{p.type}</div>
                     <div style={{ fontSize: 12.5, color: "var(--muted-foreground)" }}>{p.description}</div>
                   </div>
-                  <button className="btn btn-secondary btn-sm" onClick={() => router.push("/app/banco-questoes")}>Praticar</button>
+                  <button className="btn btn-secondary btn-sm" onClick={() => router.push("/banco-questoes")}>Praticar</button>
                 </div>
                 <div style={{ height: 5, background: "rgba(30,41,59,0.6)", borderRadius: 999 }}>
                   <div style={{ width: `${p.percentage}%`, height: "100%", background: p.color, borderRadius: 999, boxShadow: `0 0 8px ${p.color}40` }} />
