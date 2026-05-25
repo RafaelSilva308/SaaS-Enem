@@ -68,7 +68,7 @@ const SECTIONS = [
   {
     title: "9. Contato",
     content: `Para exercer seus direitos ou tirar dúvidas sobre privacidade, entre em contato:
-E-mail: privacidade@saas-enem.com.br
+E-mail: privacidade@enemproapp.com.br
 Encarregado de dados (DPO): disponível no e-mail acima.`,
   },
 ]

@@ -28,8 +28,10 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     JWT_ALGORITHM: str = "HS256"
 
+    EXTRA_CORS_ORIGINS: str = ""  # origens adicionais separadas por vírgula
+
     RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "noreply@saas-enem.com.br"
+    EMAIL_FROM: str = "noreply@enemproapp.com.br"
 
     OPENAI_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
@@ -48,7 +50,7 @@ class Settings(BaseSettings):
     # Web Push (VAPID) — gerar com: python -c "from py_vapid import Vapid; v=Vapid(); v.generate_keys(); print(v.public_key, v.private_key)"
     VAPID_PUBLIC_KEY: str = ""
     VAPID_PRIVATE_KEY: str = ""
-    VAPID_CLAIMS_EMAIL: str = "mailto:admin@saas-enem.com.br"
+    VAPID_CLAIMS_EMAIL: str = "mailto:admin@enemproapp.com.br"
 
 
 settings = Settings()

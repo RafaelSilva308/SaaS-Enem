@@ -65,7 +65,7 @@ const SECTIONS = [
   },
   {
     title: "10. Contato",
-    content: `Dúvidas sobre estes Termos: contato@saas-enem.com.br`,
+    content: `Dúvidas sobre estes Termos: contato@enemproapp.com.br`,
   },
 ]
 
