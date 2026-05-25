@@ -20,6 +20,6 @@ jobs:
 
       - name: Deploy to Railway
         working-directory: backend
-        run: railway up --service ${{ vars.RAILWAY_SERVICE_ID }} --detach
+        run: railway up --service c9305353-0587-4a82-a73f-ad3baf3082d0 --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
