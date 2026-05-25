@@ -5,25 +5,19 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import {
-  BookOpen, Brain, CheckCircle, ChevronRight, Clock, Loader2,
+  Brain, CheckCircle, ChevronRight, Loader2,
   Sparkles, Target, Trophy, Zap,
 } from "lucide-react"
 
 import { api } from "@/lib/api"
 import { useAuthStore } from "@/stores/auth-store"
-import { useTimer } from "@/hooks/useTimer"
-import { QuestionCard } from "@/components/shared/QuestionCard"
 import { CheckoutModal } from "@/components/subscription/CheckoutModal"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 
 // ── Types ─────────────────────────────────────────────────────────
-interface Question {
-  id: string; subject: string; topic?: string; difficulty?: string
-  statement: string; imageUrl?: string
-  options: { letter: string; text: string }[]
-}
+type AssessmentLevel = "weak" | "moderate" | "strong"
+
 interface SubjectScore {
   subject: string; label: string; score: number
   correct: number; total: number; level: "weak" | "moderate" | "strong"
@@ -211,108 +205,76 @@ function StepProfile({ data, onChange, onNext }: {
   )
 }
 
-// ── Step 3: Diagnostic Quiz ───────────────────────────────────────
-function StepDiagnostic({
-  questions, answers, onAnswer, onSubmit, loading,
+// ── Step 3: Self Assessment ───────────────────────────────────────
+const SUBJECTS_CONFIG = [
+  { key: "linguagens", label: "Linguagens & Códigos", icon: "📚", desc: "Português, Literatura, Inglês, Artes" },
+  { key: "matematica", label: "Matemática",            icon: "🔢", desc: "Álgebra, Geometria, Estatística" },
+  { key: "cn",         label: "Ciências da Natureza",  icon: "🔬", desc: "Física, Química, Biologia" },
+  { key: "ch",         label: "Ciências Humanas",      icon: "🌍", desc: "História, Geografia, Filosofia, Sociologia" },
+]
+
+const LEVELS: { value: AssessmentLevel; label: string; desc: string; color: string }[] = [
+  { value: "weak",     label: "Fraco",   desc: "Tenho dificuldade",    color: "border-red-500/50 bg-red-500/10 text-red-400" },
+  { value: "moderate", label: "Regular", desc: "Sei o básico",         color: "border-yellow-500/50 bg-yellow-500/10 text-yellow-400" },
+  { value: "strong",   label: "Forte",   desc: "Tenho domínio",        color: "border-green-500/50 bg-green-500/10 text-green-400" },
+]
+
+function StepSelfAssessment({
+  assessments, onChange, onSubmit, loading,
 }: {
-  questions: Question[]; answers: Record<string, string>
-  onAnswer: (qId: string, letter: string) => void
-  onSubmit: () => void; loading: boolean
+  assessments: Record<string, AssessmentLevel>
+  onChange: (subj: string, level: AssessmentLevel) => void
+  onSubmit: () => void
+  loading: boolean
 }) {
-  const SUBJECTS_ORDER = ["linguagens", "matematica", "cn", "ch"]
-  const [activeTab, setActiveTab] = useState(0)
-  const timer = useTimer(40 * 60)
-
-  useEffect(() => { timer.start() }, [])
-
-  const questionsBySubject = SUBJECTS_ORDER.map(s => questions.filter(q => q.subject === s))
-  const currentSubjectQuestions = questionsBySubject[activeTab] ?? []
-  const [currentQ, setCurrentQ] = useState(0)
-  const question = currentSubjectQuestions[currentQ]
-
-  const totalAnswered = Object.keys(answers).length
-  const progress = Math.round((totalAnswered / Math.max(questions.length, 1)) * 100)
+  const allAnswered = SUBJECTS_CONFIG.every(s => assessments[s.key])
 
   return (
-    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold">Quiz Diagnóstico</h2>
-          <p className="text-muted-foreground text-sm">{totalAnswered}/{questions.length} respondidas</p>
-        </div>
-        <div className={cn("glass rounded-xl px-4 py-2 font-mono font-bold text-lg",
-          timer.isCritical ? "text-destructive border-destructive/30" :
-          timer.isUrgent ? "text-yellow-400 border-yellow-400/30" : "text-foreground"
-        )}>
-          <Clock size={14} className="inline mr-1.5 -mt-0.5" />{timer.formatted}
-        </div>
+    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-1">Como você está em cada área?</h2>
+        <p className="text-muted-foreground text-sm">Seja honesto — isso personaliza seu plano de estudos</p>
       </div>
 
-      <Progress value={progress} className="h-1.5" />
-
-      {/* Subject tabs */}
-      <div className="flex gap-1 p-1 glass rounded-xl">
-        {SUBJECTS_ORDER.map((subj, i) => {
-          const subjectQs = questionsBySubject[i]
-          const answered = subjectQs.filter(q => answers[q.id]).length
-          return (
-            <button key={subj} onClick={() => { setActiveTab(i); setCurrentQ(0) }}
-              className={cn(
-                "flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-all",
-                activeTab === i ? "gradient-blue text-white" : "text-muted-foreground hover:text-foreground"
-              )}>
-              <span className="hidden sm:inline">{SUBJECT_LABELS[subj]}</span>
-              <span className="sm:hidden">{SUBJECT_LABELS[subj].slice(0, 3)}</span>
-              <span className="block text-[10px] opacity-70">{answered}/{subjectQs.length}</span>
-            </button>
-          )
-        })}
+      <div className="space-y-4">
+        {SUBJECTS_CONFIG.map(subj => (
+          <div key={subj.key} className="glass rounded-xl p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{subj.icon}</span>
+              <div>
+                <p className="font-semibold text-sm">{subj.label}</p>
+                <p className="text-xs text-muted-foreground">{subj.desc}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {LEVELS.map(level => (
+                <button
+                  key={level.value}
+                  onClick={() => onChange(subj.key, level.value)}
+                  className={cn(
+                    "py-2 px-3 rounded-lg border text-center transition-all text-xs font-medium",
+                    assessments[subj.key] === level.value
+                      ? level.color
+                      : "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20"
+                  )}
+                >
+                  <p className="font-bold">{level.label}</p>
+                  <p className="opacity-70 text-[10px]">{level.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Question */}
-      {question && (
-        <QuestionCard
-          index={currentQ}
-          total={currentSubjectQuestions.length}
-          statement={question.statement}
-          options={question.options}
-          selectedAnswer={answers[question.id] ?? null}
-          onSelect={letter => onAnswer(question.id, letter)}
-        />
-      )}
-
-      {/* Navigation */}
-      <div className="flex gap-2 justify-between">
-        <Button variant="outline" className="border-white/10" disabled={currentQ === 0}
-          onClick={() => setCurrentQ(q => q - 1)}>
-          Anterior
-        </Button>
-
-        {currentQ < currentSubjectQuestions.length - 1 ? (
-          <Button className="gradient-blue hover:opacity-90"
-            onClick={() => setCurrentQ(q => q + 1)}>
-            Próxima
-          </Button>
-        ) : activeTab < SUBJECTS_ORDER.length - 1 ? (
-          <Button className="gradient-blue hover:opacity-90"
-            onClick={() => { setActiveTab(t => t + 1); setCurrentQ(0) }}>
-            Próxima área
-          </Button>
-        ) : (
-          <Button onClick={onSubmit} disabled={loading || totalAnswered < questions.length * 0.8}
-            className="gradient-brand hover:opacity-90 font-semibold">
-            {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <CheckCircle size={16} className="mr-2" />}
-            {loading ? "Analisando…" : "Finalizar diagnóstico"}
-          </Button>
-        )}
-      </div>
-
-      {totalAnswered >= questions.length * 0.8 && (
-        <p className="text-center text-xs text-muted-foreground">
-          Você respondeu {totalAnswered} questões. Pode finalizar a qualquer momento.
-        </p>
-      )}
+      <Button
+        onClick={onSubmit}
+        disabled={!allAnswered || loading}
+        className="w-full gradient-brand hover:opacity-90 font-semibold"
+      >
+        {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <CheckCircle size={16} className="mr-2" />}
+        {loading ? "Gerando seu diagnóstico…" : "Ver meu diagnóstico"}
+      </Button>
     </motion.div>
   )
 }
@@ -500,34 +462,22 @@ export default function OnboardingPage() {
   const [profile, setProfile] = useState<ProfileData>({
     learning_style: "", preferred_time: "", daily_hours_goal: 2, available_days: [],
   })
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [assessments, setAssessments] = useState<Record<string, AssessmentLevel>>({})
   const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  // Checar se onboarding já foi feito
   useEffect(() => {
     api.get("/diagnostic/status")
       .then(({ data }) => {
         if (data.has_completed) router.replace("/dashboard")
       })
       .catch((err) => {
-        // Sem banco configurado (dev local) — deixa o usuário completar o onboarding
         if (err.response?.status !== 422 && err.response?.status !== 500) return
         toast.error("Erro ao verificar status. Continuando onboarding.")
       })
   }, [])
 
-  // Carregar questões ao entrar no step 3
-  useEffect(() => {
-    if (step === 3 && questions.length === 0) {
-      api.get("/diagnostic/questions").then(({ data }) => {
-        setQuestions(data.questions)
-      }).catch(() => toast.error("Erro ao carregar questões. Recarregue a página."))
-    }
-  }, [step])
-
-  async function handleSubmitDiagnostic() {
+  async function handleSubmitAssessment() {
     setSubmitting(true)
     try {
       const payload = {
@@ -537,9 +487,9 @@ export default function OnboardingPage() {
           daily_hours_goal: profile.daily_hours_goal,
           available_days: profile.available_days,
         },
-        answers: Object.entries(answers).map(([question_id, answer]) => ({ question_id, answer })),
+        assessments,
       }
-      const { data } = await api.post("/diagnostic/submit", payload)
+      const { data } = await api.post("/diagnostic/self-assessment", payload)
       setDiagnosticResult(data)
       setStep(4)
     } catch (err: any) {
@@ -569,12 +519,11 @@ export default function OnboardingPage() {
               <StepProfile key="profile" data={profile} onChange={setProfile} onNext={() => setStep(3)} />
             )}
             {step === 3 && (
-              <StepDiagnostic
-                key="diagnostic"
-                questions={questions}
-                answers={answers}
-                onAnswer={(qId, letter) => setAnswers(prev => ({ ...prev, [qId]: letter }))}
-                onSubmit={handleSubmitDiagnostic}
+              <StepSelfAssessment
+                key="self-assessment"
+                assessments={assessments}
+                onChange={(subj, level) => setAssessments(prev => ({ ...prev, [subj]: level }))}
+                onSubmit={handleSubmitAssessment}
                 loading={submitting}
               />
             )}

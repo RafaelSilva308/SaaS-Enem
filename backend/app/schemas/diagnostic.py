@@ -84,6 +84,20 @@ class DiagnosticResult(BaseModel):
     learning_profile: str
 
 
+class SelfAssessmentRequest(BaseModel):
+    learning_profile: LearningProfileInput
+    assessments: dict[str, Literal["weak", "moderate", "strong"]]
+
+    @field_validator("assessments")
+    @classmethod
+    def validate_subjects(cls, v: dict) -> dict:
+        valid = {"linguagens", "matematica", "cn", "ch"}
+        for key in v:
+            if key not in valid:
+                raise ValueError(f"Matéria inválida: {key}")
+        return v
+
+
 class DiagnosticStatusResponse(BaseModel):
     has_completed: bool
     diagnostic_id: str | None = None

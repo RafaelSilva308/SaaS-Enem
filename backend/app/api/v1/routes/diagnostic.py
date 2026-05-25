@@ -9,6 +9,7 @@ from app.schemas.diagnostic import (
     DiagnosticResult,
     DiagnosticStatusResponse,
     DiagnosticSubmitRequest,
+    SelfAssessmentRequest,
 )
 from app.services import diagnostic_service
 
@@ -30,6 +31,15 @@ async def submit_diagnostic(
     session: AsyncSession = Depends(get_session),
 ):
     return await diagnostic_service.submit_diagnostic(str(user.id), data, session)
+
+
+@router.post("/self-assessment", response_model=DiagnosticResult, status_code=201)
+async def self_assessment(
+    data: SelfAssessmentRequest,
+    user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    return await diagnostic_service.submit_self_assessment(str(user.id), data, session)
 
 
 @router.get("/result", response_model=DiagnosticResult)

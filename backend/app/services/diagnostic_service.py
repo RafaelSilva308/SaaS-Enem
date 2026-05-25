@@ -17,6 +17,7 @@ from app.schemas.diagnostic import (
     LearningProfileInput,
     QuestionOptionOut,
     QuestionOut,
+    SelfAssessmentRequest,
     SubjectScore,
     WeakArea,
 )
@@ -233,6 +234,107 @@ async def submit_diagnostic(
             available_days=lp.available_days,
         )
         session.add(new_lp)
+
+    await session.commit()
+    await session.refresh(diag)
+
+    return DiagnosticResult(
+        diagnostic_id=str(diag.id),
+        scores=subject_scores,
+        weak_areas=weak_areas,
+        estimated_hours=estimated_hours,
+        overall_score=overall,
+        learning_profile=data.learning_profile.learning_style,
+    )
+
+
+_LEVEL_SCORE = {"weak": 30, "moderate": 60, "strong": 85}
+_LEVEL_HOURS  = {"weak": 60, "moderate": 35, "strong": 15}
+
+
+async def submit_self_assessment(
+    user_id: str,
+    data: SelfAssessmentRequest,
+    session: AsyncSession,
+) -> DiagnosticResult:
+    result = await session.exec(
+        select(Diagnostic).where(Diagnostic.user_id == uuid.UUID(user_id))
+    )
+    if result.first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Diagnóstico já realizado. Use /diagnostic/result para ver seus resultados.",
+        )
+
+    subject_scores: list[SubjectScore] = []
+    weak_areas: list[WeakArea] = []
+    scores_db: dict[str, int] = {}
+    estimated_hours = 0
+
+    for subj in SUBJECTS:
+        level = data.assessments.get(subj, "moderate")
+        pct = _LEVEL_SCORE[level]
+        scores_db[subj] = pct
+        estimated_hours += _LEVEL_HOURS[level]
+
+        subject_scores.append(SubjectScore(
+            subject=subj,
+            label=SUBJECT_LABELS[subj],
+            score=pct,
+            correct=0,
+            total=0,
+            level=level,
+        ))
+
+        if level == "weak":
+            weak_areas.append(WeakArea(
+                subject=subj,
+                label=SUBJECT_LABELS[subj],
+                score=pct,
+                recommendation=SUBJECT_RECOMMENDATIONS[subj],
+            ))
+
+    overall = int(sum(s.score for s in subject_scores) / len(subject_scores))
+
+    diag = Diagnostic(
+        id=uuid.uuid4(),
+        user_id=uuid.UUID(user_id),
+        linguagens_score=scores_db.get("linguagens"),
+        matematica_score=scores_db.get("matematica"),
+        cn_score=scores_db.get("cn"),
+        ch_score=scores_db.get("ch"),
+        estimated_hours=estimated_hours,
+        weak_areas=[
+            {"subject": w.subject, "score": w.score, "recommendation": w.recommendation}
+            for w in weak_areas
+        ],
+        learning_profile=data.learning_profile.learning_style,
+        completed_at=utcnow(),
+    )
+    session.add(diag)
+
+    lp_result = await session.exec(
+        select(LearningProfile).where(LearningProfile.user_id == uuid.UUID(user_id))
+    )
+    existing_lp = lp_result.first()
+    lp = data.learning_profile
+    daily_hours = float(lp.daily_hours_goal)
+
+    if existing_lp:
+        existing_lp.learning_style = lp.learning_style
+        existing_lp.preferred_time = lp.preferred_time
+        existing_lp.daily_hours_goal = daily_hours  # type: ignore[assignment]
+        existing_lp.available_days = lp.available_days
+        session.add(existing_lp)
+    else:
+        session.add(LearningProfile(
+            id=uuid.uuid4(),
+            user_id=uuid.UUID(user_id),
+            learning_style=lp.learning_style,
+            preferred_time=lp.preferred_time,
+            daily_hours_goal=daily_hours,  # type: ignore[arg-type]
+            available_days=lp.available_days,
+        ))
 
     await session.commit()
     await session.refresh(diag)
