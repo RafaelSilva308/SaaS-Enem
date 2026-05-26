@@ -55,6 +55,13 @@ cd frontend && vercel deploy --prod
 
 **Design System:** bg `#020617` · primary `#2563eb` · secondary `#10b981` · accent `#7c3aed` · Glassmorphism dark · Fonte Outfit
 
+**Variáveis de ambiente — Frontend (Vercel):**
+- `NEXT_PUBLIC_API_URL` = `https://backend-production-2daa.up.railway.app/api/v1`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` = `pk_live_...` (chave pública Stripe)
+
+**Variáveis de ambiente — Frontend local (`.env.local`):**
+- `NEXT_PUBLIC_API_URL` = `http://localhost:8000/api/v1`
+
 ---
 
 ## Banco de Dados — 24 Tabelas
@@ -167,6 +174,9 @@ cd frontend && vercel deploy --prod
 - `POST /regenerate` — reordena plano por fraqueza + frequência ENEM
 - `GET /turbo-session` — sessão rápida (10–15min) no tópico mais fraco
 
+### Middleware de Segurança
+- `SecurityHeadersMiddleware` (`backend/app/middleware/security.py`) — adiciona headers HTTP de segurança padrão e `X-Request-ID` em todas as respostas para rastreabilidade de logs
+
 ### Admin (`/api/v1/admin/`) — requer `role=admin`
 - `GET /metrics` — DAU, MAU, MRR, churn
 - `GET /users` — lista paginada de usuários
@@ -229,6 +239,19 @@ cd frontend && vercel deploy --prod
 - `InstallPrompt` + `PushSetup` + `ServiceWorkerRegistrar` — PWA
 - `ProgressRing`, `TopicCard`, `QuestionCard` — componentes reutilizáveis
 
+### Arquivos PWA (frontend/public/)
+- `sw.js` — service worker
+- `manifest.webmanifest` — manifest PWA
+- `icon.svg` + `icon-maskable.svg` — ícones do app
+
+### Stores Zustand
+- `auth-store.ts` — autenticação + persist localStorage + sync cookie `auth_session`
+- `gamification-store.ts` — XP, nível e streak em cache local
+
+### Scripts utilitários (backend/scripts/)
+- `create_test_user.py` — cria usuário + assinatura premium no banco de produção
+- `_check_subs.py` — consulta status de usuários e assinaturas no banco (diagnóstico rápido)
+
 ---
 
 ## Correções e Bugs Resolvidos
@@ -266,6 +289,7 @@ cd frontend && vercel deploy --prod
 | `RESEND_API_KEY` | ✅ Configurado |
 | `GOOGLE_API_KEY` | ✅ Configurado (Gemini — correção de redação funciona) |
 | `OPENAI_API_KEY` | ❌ Pendente — fallback GPT-4o inativo (Gemini é o primário) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ⚠️ Verificar se está configurado no Vercel |
 | `VAPID_PUBLIC_KEY` | ✅ Configurado |
 | `VAPID_PRIVATE_KEY` | ✅ Configurado |
 | `APP_ENV` | ✅ `production` (docs FastAPI desativados) |
@@ -338,6 +362,14 @@ Get-Content C:\Users\rafae\.saas-enem-tokens
 ```
 
 **Nota Railway:** CLI (`railway whoami`) não aceita o token UUID — usar API GraphQL diretamente via `curl`.
+
+---
+
+## Arquivos Legados (manter, não remover)
+
+| Arquivo | Situação |
+|---------|---------|
+| `backend/app/services/asaas_client.py` | Cliente Asaas (pagamentos BR) — substituído pelo Stripe mas mantido no código com degradação graciosa (mock quando sem `ASAAS_API_KEY`). Não é usado em produção. |
 
 ---
 
