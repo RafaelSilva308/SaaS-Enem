@@ -1,6 +1,6 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-26
+> **Última atualização:** 2026-05-26 (sessão de importação das provas do ENEM)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
 
 ---
@@ -97,9 +97,9 @@ cd frontend && vercel deploy --prod
 - `POST /study-sessions/end` — calcula duração, atualiza sprint, award XP
 
 ### Diagnóstico (`/api/v1/diagnostic/`)
-- `GET /questions` — 40 questões seed (cache Redis 1h)
-- `POST /submit` — diagnóstico completo via respostas às questões
-- `POST /self-assessment` — diagnóstico rápido via autoavaliação (Fraco/Regular/Forte por área)
+- `GET /questions` — 40 questões (existe no backend mas **não é usado pelo onboarding atual**)
+- `POST /submit` — diagnóstico via respostas às questões (existe mas **não é usado pelo onboarding atual**)
+- `POST /self-assessment` — **único endpoint usado pelo onboarding** — diagnóstico via autoavaliação (Fraco/Regular/Forte por área)
 - `GET /result` — resultado do diagnóstico do usuário
 - `GET /status` — `{ has_completed: bool }` para redirect do onboarding
 
@@ -206,7 +206,7 @@ cd frontend && vercel deploy --prod
 - `/reset-password` — tela de erro explícita quando token ausente
 
 ### App Protegido (`/(app)/`)
-- `/onboarding` — wizard 5 etapas: boas-vindas → perfil → autoavaliação → resultado → plano
+- `/onboarding` — wizard 5 etapas: boas-vindas → perfil → **autoavaliação** (Fraco/Regular/Forte por área, sem questões) → resultado → plano
 - `/dashboard` — countdown ENEM, meta diária (ProgressRing), timer de sessão flutuante, atividade semanal (BarChart), recomendação IA, próximo simulado
 - `/plano` — 3 views (sprint atual / calendário / por área) + painel ajuste lateral
 - `/banco-questoes` — filtros, lista paginada, aba dúvidas, modo estudo tela cheia
@@ -248,9 +248,39 @@ cd frontend && vercel deploy --prod
 - `auth-store.ts` — autenticação + persist localStorage + sync cookie `auth_session`
 - `gamification-store.ts` — XP, nível e streak em cache local
 
+### Banco de Questões — Estado em Produção (Neon)
+
+**1.558 questões reais do ENEM** importadas em 2026-05-26.
+
+| Disciplina | Questões |
+|-----------|---------|
+| Ciências da Natureza | 418 |
+| Linguagens | 390 |
+| Ciências Humanas | 381 |
+| Matemática | 369 |
+| **Total** | **1.558** |
+
+**Anos cobertos:** 2009, 2011–2021, 2024, 2025 (14 anos)
+**Anos ausentes:** 2010, 2022, 2023 — PDFs escaneados (sem texto extraível, precisariam de OCR)
+
+**Origem dos dados:** PDFs oficiais INEP em `Provas_2009-2025/` (pasta local, no `.gitignore`, não vai ao GitHub)
+**Critérios de descarte:** questões com imagem obrigatória (gráficos, tirinhas, mapas, tabelas) e questões com texto corrompido
+
+**Para reimportar ou adicionar anos:**
+```bash
+# Da raiz do projeto
+python backend/scripts/extract_questions.py
+# Do diretório backend/
+DATABASE_URL_SYNC="postgresql://..." python scripts/import_questions.py
+```
+
+---
+
 ### Scripts utilitários (backend/scripts/)
 - `create_test_user.py` — cria usuário + assinatura premium no banco de produção
 - `_check_subs.py` — consulta status de usuários e assinaturas no banco (diagnóstico rápido)
+- `extract_questions.py` — extrai questões dos PDFs em `Provas_2009-2025/` e gera `questions.json` (requer `pip install pdfplumber`)
+- `import_questions.py` — importa `questions.json` para o banco (PostgreSQL ou SQLite)
 
 ---
 
@@ -308,7 +338,7 @@ cd frontend && vercel deploy --prod
 
 | Item | Status | Ação necessária |
 |------|--------|----------------|
-| 5.4 Seeds em produção | ⚠️ Verificar | Confirmar se `essay_themes`, `badges` e `questions` estão populados no banco Neon |
+| 5.4 Seeds em produção | ✅ Questões OK | `questions`: 1.558 reais do ENEM importadas. Verificar se `essay_themes` e `badges` estão populados. |
 | 5.7 Testes de fumaça | ⚠️ Parcial | Testar: simulado completo, correção de redação, admin, PWA, push notification |
 | 5.8 Sentry + UptimeRobot | ❌ Pendente | Criar contas, instalar SDKs, configurar alertas |
 | 5.9 STRIPE_WEBHOOK_SECRET | ❌ Pendente | Configurar webhook no Stripe Dashboard → copiar secret → Railway env var |
