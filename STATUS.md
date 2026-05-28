@@ -424,89 +424,117 @@ Extrair validação de senha para função compartilhada e aplicar em `RegisterR
 
 ## O Que Falta — Fase 5 (Deploy/Lançamento)
 
-> **Última revisão completa:** 2026-05-28 (auditoria do código real, não apenas plano)
+> **Última revisão completa:** 2026-05-28 — auditoria real do código + sessão de correções.
+> Tudo que está ✅ foi implementado, commitado e deployado nesta sessão.
 
-### Bugs Críticos (quebrado silenciosamente em produção)
+---
 
-| # | Arquivo | Problema | Ação necessária |
-|---|---------|---------|----------------|
-| C1 | `frontend/src/components/subscription/CheckoutModal.tsx` | ~~**Checkout de cartão é fake**~~ — **RESOLVIDO 2026-05-28**: substituído por `CardSetupView` real com `CardElement` + `stripe.confirmCardSetup`. Backend agora retorna `setup_client_secret` do `pending_setup_intent` da subscription Stripe. | ✅ Feito |
-| C2 | Railway env vars | **`STRIPE_WEBHOOK_SECRET` ausente** — nenhum evento Stripe é processado (`subscription.updated`, `invoice.payment_succeeded`, etc.) | Configurar webhook no Stripe Dashboard → copiar secret → Railway env var |
-| C3 | `frontend/src/app/(app)/configuracoes/page.tsx:168` + backend | **"Atualizar senha" não faz nada** — botão sem `onClick`. Não existe endpoint `PUT /auth/me/password` no backend (só existe `reset-password` para fluxo de esqueci senha) | Criar endpoint no backend + conectar no frontend |
+### Resumo Rápido
 
-### Bugs Significativos (parece funcionar mas não funciona)
+| Categoria | Total | ✅ Feito | ❌ Pendente | ⏸️ Adiado |
+|-----------|-------|---------|------------|----------|
+| Bugs críticos | 3 | 3 | 0 | 0 |
+| Bugs significativos | 2 | 1 | 0 | 1 |
+| Segurança | 2 | 2 | 0 | 0 |
+| Observabilidade | 2 | 0 | 2 | 0 |
+| Testes de fumaça | 10 fluxos | 0 | 10 | 0 |
+| Lançamento | 4 | 0 | 4 | 0 |
 
-| # | Arquivo | Problema | Ação necessária |
-|---|---------|---------|----------------|
-| S1 | `frontend/src/app/(app)/configuracoes/page.tsx:47,165` | **Toggle 2FA é decorativo** — `setTwoFA(v => !v)` só atualiza estado React local. Não chama `POST /auth/2fa/enable` nem `POST /auth/2fa/verify`. Backend tem os endpoints completos, frontend os ignora. | Implementar fluxo real: enable → mostrar QR → confirmar TOTP |
-| S2 | `frontend/src/app/(app)/configuracoes/page.tsx:136–140` | **"Matérias com dificuldade" hardcoded** — `const active = i < 4` sempre mostra as primeiras 4 como ativas, sem ler nem gravar no perfil do usuário | Conectar ao `learning_profile` do usuário via API |
+---
 
-### Segurança (auditoria 2026-05-26)
+### Bugs Críticos — TODOS RESOLVIDOS ✅
 
-| # | Severidade | Arquivo | Problema |
-|---|-----------|---------|---------|
-| SEC1 | **High** | `backend/app/core/config.py:11` | `SECRET_KEY="change-me"` aceito em staging — JWTs forjáveis |
-| SEC2 | **Medium** | `backend/app/schemas/auth.py:51` | Reset de senha aceita senha mais fraca que o cadastro (`len >= 8` apenas) |
+| # | O que era | O que foi feito | Commit |
+|---|-----------|----------------|--------|
+| C1 | Checkout de cartão fake (`setTimeout` → success sem chamar Stripe) | `CardSetupView` com `CardElement` + `stripe.confirmCardSetup`. Backend retorna `setup_client_secret` do `pending_setup_intent`. `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` adicionada ao Vercel. | `09dd147` |
+| C2 | `STRIPE_WEBHOOK_SECRET` ausente — nenhum evento Stripe processado | Webhook criado no Stripe (`we_1Tc8OYGlckaqYJAXhqz5hsag`), secret adicionado no Railway. Verificado: endpoint retorna 400 para assinatura inválida. | — (Railway env) |
+| C3 | Botão "Atualizar senha" sem onClick, sem endpoint no backend | `POST /auth/change-password` no backend (bcrypt + validação de força). Frontend com inputs controlados, toast e reset de campos. | `2c1adb8` |
 
-**Fix SEC1:**
-```python
-_INSECURE_ENVS = {"production", "staging"}
-if self.APP_ENV in _INSECURE_ENVS and self.SECRET_KEY in _INSECURE_KEYS:
-    raise ValueError("SECRET_KEY insegura detectada")
-```
+---
 
-**Fix SEC2:** Extrair validação de senha para função compartilhada e aplicar em `RegisterRequest` e `ResetPasswordRequest`.
+### Bugs Significativos
 
-### Seeds em Produção
+| # | Status | O que era | O que foi feito |
+|---|--------|-----------|----------------|
+| S1 | ⏸️ Adiado | Toggle 2FA decorativo — só atualiza React state, não chama backend. Endpoints `/2fa/enable` e `/2fa/verify` existem mas não são usados. | Decisão 2026-05-28: não será implementado antes do lançamento. |
+| S2 | ✅ Feito | "Matérias com dificuldade" hardcoded (`const active = i < 4`) | Chips leem `GET /diagnostic/result` e destacam áreas com `level === "weak"`. Read-only com legenda "Baseado no diagnóstico inicial". | `a402cc1` |
 
-| Item | Status |
-|------|--------|
-| `questions` | ✅ 1.558 questões reais do ENEM importadas |
-| `essay_themes` | ✅ Auto-seed lazy em `essays_service.py:_ensure_themes_seeded` (roda na primeira chamada a `/essays/themes`) |
-| `badges` | ✅ Auto-seed lazy em `gamification_service.py:_ensure_badges_seeded` (roda na primeira chamada à gamificação) |
+---
 
-### Observabilidade
+### Segurança — TODOS RESOLVIDOS ✅
 
-| Item | Status | Ação necessária |
-|------|--------|----------------|
-| Sentry | ❌ Pendente | Criar conta, instalar SDK no backend (Python) e frontend (Next.js), configurar alertas |
-| UptimeRobot | ❌ Pendente | Criar monitor para `https://backend-production-2daa.up.railway.app/health` |
+| # | Severidade | O que era | O que foi feito | Commit |
+|---|-----------|-----------|----------------|--------|
+| SEC1 | High | `SECRET_KEY="change-me"` aceita em staging — JWTs forjáveis | Guard estendido para `APP_ENV in {"production", "staging"}`. Servidor falha no startup com mensagem clara. | `5112c92` |
+| SEC2 | Medium | Reset de senha validava só `len >= 8`, aceitando senhas mais fracas que o cadastro | Extraída `_validate_password_strength()` compartilhada. Aplicada em `RegisterRequest`, `ResetPasswordRequest` e `ChangePasswordRequest`. | `5112c92` |
 
-### Testes de Fumaça
+---
 
-| Fluxo | Status |
-|-------|--------|
-| Registro + verificação de e-mail | ⚠️ Não testado em produção |
-| Login + 2FA | ⚠️ Não testado em produção |
-| Simulado completo end-to-end | ⚠️ Não testado em produção |
-| Correção de redação (Gemini) | ⚠️ Não testado em produção |
-| Painel admin | ⚠️ Não testado em produção |
-| PIX checkout (Stripe real) | ⚠️ Não testado em produção |
-| Boleto checkout (Stripe real) | ⚠️ Não testado em produção |
-| Cartão de crédito | ❌ Quebrado (ver C1 acima) |
-| PWA install | ⚠️ Não testado em produção |
-| Push notification | ⚠️ Não testado em produção |
+### Seeds em Produção — OK ✅
 
-### Lançamento
+| Tabela | Status |
+|--------|--------|
+| `questions` | ✅ 1.558 questões reais do ENEM (2009–2025, 14 anos) |
+| `essay_themes` | ✅ Auto-seed lazy — roda na primeira chamada a `GET /essays/themes` |
+| `badges` | ✅ Auto-seed lazy — roda na primeira chamada à gamificação |
 
-| Item | Status |
-|------|--------|
-| Analytics (GA4 ou Plausible) | ❌ Pendente |
-| E-mail para waitlist | ❌ Pendente |
-| Redes sociais | ❌ Pendente |
-| Product Hunt BR | ❌ Pendente |
+---
 
-### Prioridade Sugerida
+### Observabilidade — PENDENTE ❌
 
-1. **C1 — Integrar Stripe Elements no cartão** (bloqueia monetização real)
-2. **C2 — `STRIPE_WEBHOOK_SECRET`** (bloqueia processamento de pagamentos)
-3. **SEC1 + SEC2 — Fixes de segurança** (baixo esforço, alto impacto)
-4. **C3 — Endpoint change-password** (UX básica esperada pelo usuário)
-5. **S1 — 2FA funcional** (recurso de segurança que está visível mas não funciona)
-6. **Sentry + UptimeRobot** (observabilidade antes do lançamento)
-7. **Testes de fumaça** (validar todos os fluxos acima)
-8. **S2 — Matérias com dificuldade** (melhoria de UX, menor prioridade)
-9. **Lançamento**
+| Item | O que é | O que fazer |
+|------|---------|------------|
+| **UptimeRobot** | Monitora se o backend está online e alerta por e-mail se cair | Criar conta em uptimerobot.com → Add Monitor → HTTP(s) → URL: `https://backend-production-2daa.up.railway.app/health` → intervalo 5 min → e-mail de alerta |
+| **Sentry** | Captura erros em tempo real com stack trace, contexto e frequência | Criar conta em sentry.io → criar projeto Python (backend) e Next.js (frontend) → instalar `sentry-sdk` no Railway + `@sentry/nextjs` no Vercel → adicionar `SENTRY_DSN` como env var nos dois |
+
+---
+
+### Testes de Fumaça — PENDENTE ❌
+
+Todos os fluxos abaixo precisam ser testados **manualmente em produção** (enemproapp.com.br) antes do lançamento.
+
+| Fluxo | Risco se quebrado | Status |
+|-------|------------------|--------|
+| Registro → OTP e-mail → verificação | Ninguém consegue criar conta | ❌ Não testado |
+| Login com usuário existente | Ninguém consegue entrar | ❌ Não testado |
+| Onboarding completo (autoavaliação → plano) | Primeiro uso quebrado | ❌ Não testado |
+| Dashboard carrega corretamente | Tela principal vazia | ❌ Não testado |
+| Criar e responder simulado completo | Feature principal | ❌ Não testado |
+| Ver resultado de simulado | Sem feedback ao usuário | ❌ Não testado |
+| Escrever e enviar redação (correção Gemini) | Feature de IA inativa | ❌ Não testado |
+| Checkout PIX (Stripe real) | Monetização PIX quebrada | ❌ Não testado |
+| Checkout Boleto (Stripe real) | Monetização boleto quebrada | ❌ Não testado |
+| Checkout Cartão (Stripe Elements) | Monetização cartão quebrada | ❌ Não testado |
+| Painel admin (métricas, usuários) | Sem visibilidade operacional | ❌ Não testado |
+| PWA — instalar na tela inicial (mobile) | UX mobile comprometida | ❌ Não testado |
+
+**Usuários de teste disponíveis em produção:**
+
+| Email | Senha | Plano |
+|-------|-------|-------|
+| rafael.lome301.1510@gmail.com | — | free |
+| teste@saas-enem.com | Teste@123456 | premium_1m (ativo até 23/06/2026) |
+
+---
+
+### Lançamento — PENDENTE ❌
+
+| Item | O que é | Status |
+|------|---------|--------|
+| Analytics | Instalar GA4 ou Plausible para medir visitas, conversões e churn | ❌ Pendente |
+| E-mail para waitlist | Disparar e-mail para leads que já demonstraram interesse | ❌ Pendente |
+| Redes sociais | Post de lançamento (Instagram, LinkedIn, Twitter/X) | ❌ Pendente |
+| Product Hunt BR | Submeter na plataforma para visibilidade | ❌ Pendente |
+
+---
+
+### Ordem Recomendada para Concluir
+
+1. **UptimeRobot** — 5 minutos, zero código, alerta imediato se o backend cair
+2. **Sentry** — 30 minutos, captura de erros em produção antes de ter usuários reais
+3. **Testes de fumaça** — você testa manualmente os 12 fluxos acima
+4. **Analytics** — GA4 ou Plausible antes de anunciar (para medir o lançamento)
+5. **Lançamento** — e-mail, redes sociais, Product Hunt BR
 
 ---
 
