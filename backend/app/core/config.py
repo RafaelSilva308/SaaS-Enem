@@ -13,10 +13,10 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _validate_secret_key(self) -> "Settings":
-        if self.APP_ENV == "production" and self.SECRET_KEY in _INSECURE_KEYS:
+        if self.APP_ENV in {"production", "staging"} and self.SECRET_KEY in _INSECURE_KEYS:
             raise ValueError(
-                "SECRET_KEY must be set to a strong random value in production. "
-                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                f"SECRET_KEY insegura detectada em APP_ENV={self.APP_ENV!r}. "
+                "Gere uma chave forte com: python -c \"import secrets; print(secrets.token_hex(32))\""
             )
         return self
 

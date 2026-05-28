@@ -3,6 +3,16 @@ from datetime import date
 from pydantic import BaseModel, EmailStr, field_validator
 
 
+def _validate_password_strength(v: str) -> str:
+    if len(v) < 8:
+        raise ValueError("A senha deve ter no mínimo 8 caracteres")
+    if not any(c.isupper() for c in v):
+        raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
+    if not any(c.isdigit() for c in v):
+        raise ValueError("A senha deve conter pelo menos um número")
+    return v
+
+
 class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
@@ -12,13 +22,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def password_strength(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("A senha deve ter no mínimo 8 caracteres")
-        if not any(c.isupper() for c in v):
-            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("A senha deve conter pelo menos um número")
-        return v
+        return _validate_password_strength(v)
 
 
 class VerifyEmailRequest(BaseModel):
@@ -51,9 +55,7 @@ class ResetPasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def password_strength(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("A senha deve ter no mínimo 8 caracteres")
-        return v
+        return _validate_password_strength(v)
 
 
 class ChangePasswordRequest(BaseModel):
@@ -63,13 +65,7 @@ class ChangePasswordRequest(BaseModel):
     @field_validator("new_password")
     @classmethod
     def password_strength(cls, v: str) -> str:
-        if len(v) < 8:
-            raise ValueError("A senha deve ter no mínimo 8 caracteres")
-        if not any(c.isupper() for c in v):
-            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("A senha deve conter pelo menos um número")
-        return v
+        return _validate_password_strength(v)
 
 
 class Enable2FARequest(BaseModel):
