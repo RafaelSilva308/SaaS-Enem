@@ -40,7 +40,8 @@ class CheckoutSessionResponse(BaseModel):
     boleto_url: str | None = None
     boleto_barcode: str | None = None
     boleto_due_date: str | None = None
-    # Cartão — apenas confirma sucesso
+    # Cartão — client_secret do SetupIntent para confirmar no frontend
+    setup_client_secret: str | None = None
     card_success: bool = False
     # Freemium
     is_free: bool = False

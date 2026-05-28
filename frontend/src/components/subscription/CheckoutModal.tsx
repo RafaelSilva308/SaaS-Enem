@@ -7,12 +7,14 @@ import {
   QrCode, X, Zap,
 } from "lucide-react"
 import { toast } from "sonner"
+import { loadStripe } from "@stripe/stripe-js"
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js"
 
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 // ── Types ──────────────────────────────────────────────────────────
 interface CheckoutData {
@@ -24,6 +26,7 @@ interface CheckoutData {
   boleto_url?: string
   boleto_barcode?: string
   boleto_due_date?: string
+  setup_client_secret?: string
   card_success?: boolean
   is_free?: boolean
 }
@@ -175,61 +178,59 @@ function BoletoView({ data, onSuccess }: { data: CheckoutData; onSuccess: () => 
   )
 }
 
-function CardView({ onSuccess }: { onSuccess: () => void }) {
-  const [loading, setLoading] = useState(false)
-  const [card, setCard] = useState({ number: "", expiry: "", cvv: "", name: "" })
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      color: "#f8fafc",
+      fontFamily: '"Outfit", system-ui, sans-serif',
+      fontSize: "14px",
+      "::placeholder": { color: "#475569" },
+    },
+    invalid: { color: "#f87171" },
+  },
+}
 
-  function formatCard(val: string) {
-    return val.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim()
-  }
-  function formatExpiry(val: string) {
-    return val.replace(/\D/g, "").slice(0, 4).replace(/^(.{2})/, "$1/")
-  }
+function CardSetupView({ clientSecret, onSuccess }: { clientSecret: string; onSuccess: () => void }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!card.number || !card.expiry || !card.cvv || !card.name) {
-      toast.error("Preencha todos os campos do cartão")
+    if (!stripe || !elements) return
+    const cardElement = elements.getElement(CardElement)
+    if (!cardElement) return
+
+    setLoading(true)
+    const { error } = await stripe.confirmCardSetup(clientSecret, {
+      payment_method: { card: cardElement },
+    })
+    setLoading(false)
+
+    if (error) {
+      toast.error(error.message ?? "Erro ao confirmar cartão. Tente novamente.")
       return
     }
-    setLoading(true)
-    // Em produção, o Stripe Elements tokeniza os dados sem enviá-los ao servidor
-    await new Promise(r => setTimeout(r, 1200))
-    setLoading(false)
-    toast.success("Cartão confirmado! Bem-vindo ao SaaS ENEM Premium.")
+
+    toast.success("Cartão vinculado! Bem-vindo ao ENEM Pro Premium.")
     onSuccess()
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label>Nome no cartão</Label>
-        <Input placeholder="RAFAEL OLIVEIRA" className="bg-white/5 border-white/10"
-          value={card.name} onChange={e => setCard(c => ({ ...c, name: e.target.value.toUpperCase() }))} />
-      </div>
-      <div className="space-y-1.5">
-        <Label>Número do cartão</Label>
-        <Input placeholder="0000 0000 0000 0000" className="bg-white/5 border-white/10 font-mono tracking-wider"
-          value={card.number} onChange={e => setCard(c => ({ ...c, number: formatCard(e.target.value) }))} />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Validade</Label>
-          <Input placeholder="MM/AA" className="bg-white/5 border-white/10"
-            value={card.expiry} onChange={e => setCard(c => ({ ...c, expiry: formatExpiry(e.target.value) }))} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>CVV</Label>
-          <Input placeholder="123" maxLength={4} className="bg-white/5 border-white/10"
-            value={card.cvv} onChange={e => setCard(c => ({ ...c, cvv: e.target.value.replace(/\D/g, "").slice(0, 4) }))} />
+        <p className="text-sm font-medium">Dados do cartão</p>
+        <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-3">
+          <CardElement options={CARD_ELEMENT_OPTIONS} />
         </div>
       </div>
-      <Button type="submit" disabled={loading} className="w-full gradient-blue hover:opacity-90 font-semibold">
+      <Button type="submit" disabled={loading || !stripe}
+        className="w-full gradient-blue hover:opacity-90 font-semibold">
         {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <CreditCard size={16} className="mr-2" />}
-        {loading ? "Processando…" : "Confirmar pagamento"}
+        {loading ? "Processando…" : "Confirmar cartão"}
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Pagamento processado com segurança via Stripe. Seus dados não são armazenados.
+        Dados tokenizados via Stripe. Nenhuma informação de cartão passa pelo nosso servidor.
       </p>
     </form>
   )
@@ -323,15 +324,17 @@ export function CheckoutModal({ planId, planName, planPrice, onSuccess, onClose 
                 </div>
               </div>
 
-              {selectedMethod === "credit_card" ? (
-                <CardView onSuccess={onSuccess} />
-              ) : (
-                <Button onClick={handleProceed} disabled={loading}
-                  className="w-full gradient-brand hover:opacity-90 font-semibold">
-                  {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Zap size={16} className="mr-2" />}
-                  {loading ? "Gerando…" : `Gerar ${selectedMethod === "pix" ? "QR Code PIX" : "Boleto"}`}
-                </Button>
-              )}
+              <Button onClick={handleProceed} disabled={loading}
+                className="w-full gradient-brand hover:opacity-90 font-semibold">
+                {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Zap size={16} className="mr-2" />}
+                {loading
+                  ? "Aguarde…"
+                  : selectedMethod === "pix"
+                    ? "Gerar QR Code PIX"
+                    : selectedMethod === "boleto"
+                      ? "Gerar Boleto"
+                      : "Continuar para dados do cartão"}
+              </Button>
 
               <p className="text-center text-xs text-muted-foreground">
                 Trial de 7 dias gratuito. Cancele antes sem cobrança.
@@ -340,6 +343,18 @@ export function CheckoutModal({ planId, planName, planPrice, onSuccess, onClose 
           ) : checkoutData.payment_method === "pix" ? (
             <motion.div key="pix" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <PixView data={checkoutData} onSuccess={onSuccess} />
+            </motion.div>
+          ) : checkoutData.payment_method === "credit_card" ? (
+            <motion.div key="card" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+              {checkoutData.setup_client_secret ? (
+                <Elements stripe={stripePromise}>
+                  <CardSetupView clientSecret={checkoutData.setup_client_secret} onSuccess={onSuccess} />
+                </Elements>
+              ) : (
+                <p className="text-center text-sm text-destructive py-6">
+                  Não foi possível iniciar o setup do cartão. Tente novamente ou use PIX.
+                </p>
+              )}
             </motion.div>
           ) : (
             <motion.div key="boleto" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>

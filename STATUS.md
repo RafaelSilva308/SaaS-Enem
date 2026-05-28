@@ -1,6 +1,6 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-26 (sessão de importação das provas do ENEM)
+> **Última atualização:** 2026-05-26 (revisão de segurança + importação das provas do ENEM)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
 
 ---
@@ -284,6 +284,94 @@ DATABASE_URL_SYNC="postgresql://..." python scripts/import_questions.py
 
 ---
 
+## Otimizações de Performance Pendentes (identificadas em 2026-05-26)
+
+Todas são mudanças de código apenas — sem alteração de infraestrutura. Redis, Railway, Vercel e Neon continuam como estão.
+
+| # | Prioridade | Esforço | Arquivo | O que fazer |
+|---|-----------|---------|---------|------------|
+| 1 | Alta | ~1h | `backend/app/services/performance_service.py` | Adicionar cache Redis (TTL 10–30min) nos 4 endpoints de `/performance/*` — fazem 4+ queries de agregação sem nenhum cache hoje |
+| 2 | Alta | ~1h | `backend/app/services/admin_service.py:340` | Corrigir N+1 query: trocar loop de 20 queries individuais de opções por uma única query `WHERE question_id IN (...)` |
+| 3 | Média | ~15min | `frontend/src/app/(app)/dashboard/page.tsx:170` | Trocar chamadas sequenciais `/dashboard` + `/contingency/status` por `Promise.all()` |
+| 4 | Média | ~30min | Páginas que usam recharts | Trocar import estático do recharts por `dynamic(() => import('recharts'), { ssr: false })` para evitar que ~245KB sejam carregados em todas as páginas |
+| 5 | Baixa | ~30min | Nova migration Alembic | Adicionar índice composto `(subject, year)` na tabela `questions` — filtro mais comum no banco de questões sem índice composto |
+| 6 | Alta (futuro) | Dias | `frontend/src/app/(app)/` | Migrar páginas pesadas (`/banco-questoes`, `/desempenho`, `/analise-comparativa`) de `"use client"` para Next.js Server Components — entrega HTML pronto ao usuário |
+
+**Detalhes técnicos de cada item:**
+
+**Item 1 — Cache performance:**
+Redis já está configurado e em uso no projeto. Basta seguir o mesmo padrão de `questions_service.py`:
+```python
+cache_key = f"perf:overview:{user_id}"
+cached = await redis.get(cache_key)
+if cached: return json.loads(cached)
+# ... queries ...
+await redis.setex(cache_key, 1800, json.dumps(result))  # TTL 30min
+```
+Aplicar em: `get_overview()`, `get_tri_history()`, `get_error_patterns()`, `get_enem_prediction()`.
+Invalidar o cache quando o usuário submete um simulado (`submit_exam()`).
+
+**Item 2 — N+1 admin:**
+Trocar `_question_with_options()` chamado em loop por batch loading:
+```python
+q_ids = [q.id for q in questions]
+opts = await session.exec(select(QuestionOption).where(QuestionOption.question_id.in_(q_ids)))
+opts_map = defaultdict(list)
+for opt in opts.all():
+    opts_map[opt.question_id].append(opt)
+```
+Padrão já existe e funciona em `exams_service.py:489–500`.
+
+**Item 3 — Promise.all dashboard:**
+```typescript
+// Antes (sequencial):
+const { data } = await api.get("/dashboard")
+const contingency = await api.get("/contingency/status")
+
+// Depois (paralelo):
+const [{ data }, contingency] = await Promise.all([
+  api.get("/dashboard"),
+  api.get("/contingency/status"),
+])
+```
+
+**Item 4 — Dynamic import recharts:**
+```typescript
+// Antes:
+import { LineChart, ... } from "recharts"
+
+// Depois:
+const LineChart = dynamic(() => import("recharts").then(m => m.LineChart), { ssr: false })
+```
+
+**Item 5 — Migration index:**
+```python
+op.create_index("idx_questions_subject_year", "questions", ["subject", "year"])
+```
+
+---
+
+## Vulnerabilidades de Segurança Identificadas (2026-05-26)
+
+Revisão de segurança realizada com análise estática + filtragem de falsos positivos. Dois findings confirmados com confiança ≥ 8/10:
+
+| # | Severidade | Arquivo | Problema | Status |
+|---|-----------|---------|---------|--------|
+| 1 | **High** | `backend/app/core/config.py:11` | `SECRET_KEY="change-me"` aceito em staging — JWTs forjáveis | ❌ Pendente fix |
+| 2 | **Medium** | `backend/app/schemas/auth.py:51` | Reset de senha aceita senha mais fraca que o cadastro (`len >= 8` apenas) | ❌ Pendente fix |
+
+**Fix #1 — config.py:**
+```python
+_INSECURE_ENVS = {"production", "staging"}
+if self.APP_ENV in _INSECURE_ENVS and self.SECRET_KEY in _INSECURE_KEYS:
+    raise ValueError("SECRET_KEY insegura detectada")
+```
+
+**Fix #2 — schemas/auth.py:**
+Extrair validação de senha para função compartilhada e aplicar em `RegisterRequest` e `ResetPasswordRequest`.
+
+---
+
 ## Correções e Bugs Resolvidos
 
 | Bug | Fix |
@@ -336,13 +424,89 @@ DATABASE_URL_SYNC="postgresql://..." python scripts/import_questions.py
 
 ## O Que Falta — Fase 5 (Deploy/Lançamento)
 
+> **Última revisão completa:** 2026-05-28 (auditoria do código real, não apenas plano)
+
+### Bugs Críticos (quebrado silenciosamente em produção)
+
+| # | Arquivo | Problema | Ação necessária |
+|---|---------|---------|----------------|
+| C1 | `frontend/src/components/subscription/CheckoutModal.tsx` | ~~**Checkout de cartão é fake**~~ — **RESOLVIDO 2026-05-28**: substituído por `CardSetupView` real com `CardElement` + `stripe.confirmCardSetup`. Backend agora retorna `setup_client_secret` do `pending_setup_intent` da subscription Stripe. | ✅ Feito |
+| C2 | Railway env vars | **`STRIPE_WEBHOOK_SECRET` ausente** — nenhum evento Stripe é processado (`subscription.updated`, `invoice.payment_succeeded`, etc.) | Configurar webhook no Stripe Dashboard → copiar secret → Railway env var |
+| C3 | `frontend/src/app/(app)/configuracoes/page.tsx:168` + backend | **"Atualizar senha" não faz nada** — botão sem `onClick`. Não existe endpoint `PUT /auth/me/password` no backend (só existe `reset-password` para fluxo de esqueci senha) | Criar endpoint no backend + conectar no frontend |
+
+### Bugs Significativos (parece funcionar mas não funciona)
+
+| # | Arquivo | Problema | Ação necessária |
+|---|---------|---------|----------------|
+| S1 | `frontend/src/app/(app)/configuracoes/page.tsx:47,165` | **Toggle 2FA é decorativo** — `setTwoFA(v => !v)` só atualiza estado React local. Não chama `POST /auth/2fa/enable` nem `POST /auth/2fa/verify`. Backend tem os endpoints completos, frontend os ignora. | Implementar fluxo real: enable → mostrar QR → confirmar TOTP |
+| S2 | `frontend/src/app/(app)/configuracoes/page.tsx:136–140` | **"Matérias com dificuldade" hardcoded** — `const active = i < 4` sempre mostra as primeiras 4 como ativas, sem ler nem gravar no perfil do usuário | Conectar ao `learning_profile` do usuário via API |
+
+### Segurança (auditoria 2026-05-26)
+
+| # | Severidade | Arquivo | Problema |
+|---|-----------|---------|---------|
+| SEC1 | **High** | `backend/app/core/config.py:11` | `SECRET_KEY="change-me"` aceito em staging — JWTs forjáveis |
+| SEC2 | **Medium** | `backend/app/schemas/auth.py:51` | Reset de senha aceita senha mais fraca que o cadastro (`len >= 8` apenas) |
+
+**Fix SEC1:**
+```python
+_INSECURE_ENVS = {"production", "staging"}
+if self.APP_ENV in _INSECURE_ENVS and self.SECRET_KEY in _INSECURE_KEYS:
+    raise ValueError("SECRET_KEY insegura detectada")
+```
+
+**Fix SEC2:** Extrair validação de senha para função compartilhada e aplicar em `RegisterRequest` e `ResetPasswordRequest`.
+
+### Seeds em Produção
+
+| Item | Status |
+|------|--------|
+| `questions` | ✅ 1.558 questões reais do ENEM importadas |
+| `essay_themes` | ✅ Auto-seed lazy em `essays_service.py:_ensure_themes_seeded` (roda na primeira chamada a `/essays/themes`) |
+| `badges` | ✅ Auto-seed lazy em `gamification_service.py:_ensure_badges_seeded` (roda na primeira chamada à gamificação) |
+
+### Observabilidade
+
 | Item | Status | Ação necessária |
 |------|--------|----------------|
-| 5.4 Seeds em produção | ✅ Questões OK | `questions`: 1.558 reais do ENEM importadas. Verificar se `essay_themes` e `badges` estão populados. |
-| 5.7 Testes de fumaça | ⚠️ Parcial | Testar: simulado completo, correção de redação, admin, PWA, push notification |
-| 5.8 Sentry + UptimeRobot | ❌ Pendente | Criar contas, instalar SDKs, configurar alertas |
-| 5.9 STRIPE_WEBHOOK_SECRET | ❌ Pendente | Configurar webhook no Stripe Dashboard → copiar secret → Railway env var |
-| 5.10 Lançamento | ❌ Pendente | Analytics, e-mail waitlist, redes sociais, Product Hunt BR |
+| Sentry | ❌ Pendente | Criar conta, instalar SDK no backend (Python) e frontend (Next.js), configurar alertas |
+| UptimeRobot | ❌ Pendente | Criar monitor para `https://backend-production-2daa.up.railway.app/health` |
+
+### Testes de Fumaça
+
+| Fluxo | Status |
+|-------|--------|
+| Registro + verificação de e-mail | ⚠️ Não testado em produção |
+| Login + 2FA | ⚠️ Não testado em produção |
+| Simulado completo end-to-end | ⚠️ Não testado em produção |
+| Correção de redação (Gemini) | ⚠️ Não testado em produção |
+| Painel admin | ⚠️ Não testado em produção |
+| PIX checkout (Stripe real) | ⚠️ Não testado em produção |
+| Boleto checkout (Stripe real) | ⚠️ Não testado em produção |
+| Cartão de crédito | ❌ Quebrado (ver C1 acima) |
+| PWA install | ⚠️ Não testado em produção |
+| Push notification | ⚠️ Não testado em produção |
+
+### Lançamento
+
+| Item | Status |
+|------|--------|
+| Analytics (GA4 ou Plausible) | ❌ Pendente |
+| E-mail para waitlist | ❌ Pendente |
+| Redes sociais | ❌ Pendente |
+| Product Hunt BR | ❌ Pendente |
+
+### Prioridade Sugerida
+
+1. **C1 — Integrar Stripe Elements no cartão** (bloqueia monetização real)
+2. **C2 — `STRIPE_WEBHOOK_SECRET`** (bloqueia processamento de pagamentos)
+3. **SEC1 + SEC2 — Fixes de segurança** (baixo esforço, alto impacto)
+4. **C3 — Endpoint change-password** (UX básica esperada pelo usuário)
+5. **S1 — 2FA funcional** (recurso de segurança que está visível mas não funciona)
+6. **Sentry + UptimeRobot** (observabilidade antes do lançamento)
+7. **Testes de fumaça** (validar todos os fluxos acima)
+8. **S2 — Matérias com dificuldade** (melhoria de UX, menor prioridade)
+9. **Lançamento**
 
 ---
 

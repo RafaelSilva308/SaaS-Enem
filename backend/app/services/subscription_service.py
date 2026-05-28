@@ -285,7 +285,7 @@ async def _create_stripe_subscription(
             "payment_method_types": payment_method_types[data.payment_method],
             "save_default_payment_method": "on_subscription",
         },
-        expand=["latest_invoice.payment_intent"],
+        expand=["latest_invoice.payment_intent", "pending_setup_intent"],
         metadata={"user_id": str(user.id), "plan_type": data.plan_type},
     )
 
@@ -327,9 +327,16 @@ async def _create_stripe_subscription(
             boleto_due_date=boleto_data.get("expires_at"),
         )
     else:
+        # Para trial com cartão, Stripe cria um pending_setup_intent para coletar
+        # o método de pagamento que será cobrado ao fim do trial.
+        pending_si = stripe_sub.get("pending_setup_intent") or {}
+        setup_client_secret = (
+            pending_si.get("client_secret") if isinstance(pending_si, dict) else None
+        )
         return CheckoutSessionResponse(
             subscription_id=str(sub.id),
             payment_method="credit_card",
+            setup_client_secret=setup_client_secret,
             card_success=payment_intent.get("status") == "succeeded",
         )
 
