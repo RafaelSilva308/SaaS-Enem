@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Users, Lock, Crown, Bell, ShieldCheck, Download, Trash2, Loader2, Edit, Check, AlertTriangle } from "lucide-react"
@@ -47,6 +47,11 @@ export default function ConfiguracoesPage() {
   const [twoFA, setTwoFA] = useState(false)
   const [pwdForm, setPwdForm] = useState({ current: "", new: "", confirm: "" })
   const [changingPwd, setChangingPwd] = useState(false)
+  const [diagScores, setDiagScores] = useState<{ subject: string; label: string; level: string }[]>([])
+
+  useEffect(() => {
+    api.get("/diagnostic/result").then(r => setDiagScores(r.data?.scores ?? [])).catch(() => {})
+  }, [])
 
   const handleExport = async () => {
     setExporting(true)
@@ -133,11 +138,20 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 <div className="card" style={{ padding: 24 }}>
-                  <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", marginBottom: 14 }}>Matérias com dificuldade</h3>
+                  <div className="row between" style={{ marginBottom: 14 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Áreas com dificuldade</h3>
+                    <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>Baseado no diagnóstico inicial</span>
+                  </div>
                   <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                    {["Probabilidade", "Termodinâmica", "Sintaxe", "Geometria Analítica", "Química Orgânica", "Geopolítica"].map((c, i) => {
-                      const active = i < 4
-                      return <button key={c} className={`chip ${active ? "chip-active" : ""}`}>{active && <Check size={11} />} {c}</button>
+                    {diagScores.length === 0 ? (
+                      <span style={{ fontSize: 13, color: "var(--muted-foreground)" }}>Diagnóstico ainda não realizado.</span>
+                    ) : diagScores.map(s => {
+                      const weak = s.level === "weak"
+                      return (
+                        <div key={s.subject} className={`chip ${weak ? "chip-active" : ""}`} style={{ cursor: "default" }}>
+                          {weak && <Check size={11} />} {s.label}
+                        </div>
+                      )
                     })}
                   </div>
                 </div>
