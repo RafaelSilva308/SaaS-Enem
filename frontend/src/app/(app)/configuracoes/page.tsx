@@ -45,6 +45,8 @@ export default function ConfiguracoesPage() {
   const [confirmEmail, setConfirmEmail] = useState("")
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [twoFA, setTwoFA] = useState(false)
+  const [pwdForm, setPwdForm] = useState({ current: "", new: "", confirm: "" })
+  const [changingPwd, setChangingPwd] = useState(false)
 
   const handleExport = async () => {
     setExporting(true)
@@ -147,14 +149,20 @@ export default function ConfiguracoesPage() {
               <div className="card" style={{ padding: 24 }}>
                 <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em", marginBottom: 16 }}>Segurança</h3>
                 <div className="col" style={{ gap: 16 }}>
-                  {[
-                    { label: "Senha atual", type: "password", placeholder: "••••••••••" },
-                    { label: "Nova senha", type: "password", placeholder: "Mínimo 8 caracteres" },
-                    { label: "Confirmar nova senha", type: "password", placeholder: "" },
-                  ].map((f) => (
-                    <div key={f.label} className="col" style={{ gap: 6 }}>
+                  {([
+                    { label: "Senha atual",        key: "current", placeholder: "••••••••••" },
+                    { label: "Nova senha",          key: "new",     placeholder: "Mín. 8 caracteres, 1 maiúscula, 1 número" },
+                    { label: "Confirmar nova senha", key: "confirm", placeholder: "" },
+                  ] as const).map((f) => (
+                    <div key={f.key} className="col" style={{ gap: 6 }}>
                       <label style={{ fontSize: 12, color: "var(--muted-foreground)", fontWeight: 500 }}>{f.label}</label>
-                      <input className="input" type={f.type} placeholder={f.placeholder} defaultValue={f.placeholder ? undefined : ""} />
+                      <input
+                        className="input"
+                        type="password"
+                        placeholder={f.placeholder}
+                        value={pwdForm[f.key]}
+                        onChange={e => setPwdForm(p => ({ ...p, [f.key]: e.target.value }))}
+                      />
                     </div>
                   ))}
                   <div className="row between" style={{ padding: 14, background: "rgba(15,23,42,0.4)", borderRadius: 10, border: "1px solid var(--border)" }}>
@@ -165,8 +173,39 @@ export default function ConfiguracoesPage() {
                     <SwitchToggle on={twoFA} onToggle={() => setTwoFA(v => !v)} />
                   </div>
                   <div className="row" style={{ gap: 8 }}>
-                    <button className="btn btn-primary">Atualizar senha</button>
-                    <button className="btn btn-ghost">Cancelar</button>
+                    <button
+                      className="btn btn-primary"
+                      disabled={changingPwd}
+                      onClick={async () => {
+                        if (!pwdForm.current || !pwdForm.new || !pwdForm.confirm) {
+                          toast.error("Preencha todos os campos"); return
+                        }
+                        if (pwdForm.new !== pwdForm.confirm) {
+                          toast.error("As senhas não coincidem"); return
+                        }
+                        setChangingPwd(true)
+                        try {
+                          await api.post("/auth/change-password", {
+                            current_password: pwdForm.current,
+                            new_password: pwdForm.new,
+                          })
+                          toast.success("Senha atualizada com sucesso!")
+                          setPwdForm({ current: "", new: "", confirm: "" })
+                        } catch (err: any) {
+                          toast.error(err.response?.data?.detail ?? "Erro ao atualizar senha")
+                        } finally {
+                          setChangingPwd(false)
+                        }
+                      }}
+                    >
+                      {changingPwd ? <Loader2 size={14} className="animate-spin" /> : "Atualizar senha"}
+                    </button>
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() => setPwdForm({ current: "", new: "", confirm: "" })}
+                    >
+                      Cancelar
+                    </button>
                   </div>
                 </div>
               </div>

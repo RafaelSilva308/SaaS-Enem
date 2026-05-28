@@ -239,6 +239,18 @@ async def reset_password(token: str, new_password: str, session: AsyncSession) -
     return MessageResponse(message="Senha redefinida com sucesso!")
 
 
+# ── change password (authenticated) ─────────────────────────────
+
+async def change_password(user: User, current_password: str, new_password: str, session: AsyncSession) -> MessageResponse:
+    if not verify_password(current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta")
+
+    user.password_hash = hash_password(new_password)
+    session.add(user)
+    await session.commit()
+    return MessageResponse(message="Senha atualizada com sucesso!")
+
+
 # ── 2FA ───────────────────────────────────────────────────────────
 
 async def enable_2fa(user_id: str, session: AsyncSession) -> Enable2FAResponse:

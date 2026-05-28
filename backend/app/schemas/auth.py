@@ -56,6 +56,22 @@ class ResetPasswordRequest(BaseModel):
         return v
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+    @field_validator("new_password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("A senha deve ter no mínimo 8 caracteres")
+        if not any(c.isupper() for c in v):
+            raise ValueError("A senha deve conter pelo menos uma letra maiúscula")
+        if not any(c.isdigit() for c in v):
+            raise ValueError("A senha deve conter pelo menos um número")
+        return v
+
+
 class Enable2FARequest(BaseModel):
     pass
 

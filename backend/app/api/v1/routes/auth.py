@@ -8,6 +8,7 @@ from app.db.engine import get_session
 from app.models.models import User
 from app.schemas.auth import (
     AuthResponse,
+    ChangePasswordRequest,
     Enable2FAResponse,
     ForgotPasswordRequest,
     LoginRequest,
@@ -98,6 +99,15 @@ async def get_me(
         role=user.role,
         has_2fa=bool(user.totp_secret),
     )
+
+
+@router.post("/change-password", response_model=MessageResponse)
+async def change_password(
+    data: ChangePasswordRequest,
+    user: User = Depends(get_current_active_user),
+    session: AsyncSession = Depends(get_session),
+):
+    return await auth_service.change_password(user, data.current_password, data.new_password, session)
 
 
 @router.post("/resend-otp", response_model=MessageResponse)
