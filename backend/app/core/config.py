@@ -52,5 +52,7 @@ class Settings(BaseSettings):
     VAPID_PRIVATE_KEY: str = ""
     VAPID_CLAIMS_EMAIL: str = "mailto:admin@enemproapp.com.br"
 
+    SENTRY_DSN: str = ""
+
 
 settings = Settings()

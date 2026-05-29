@@ -33,6 +33,9 @@ httpx==0.28.0
 # ─── Web Push ────────────────────────────────────────
 pywebpush==2.0.0
 
+# ─── Observabilidade ─────────────────────────────────
+sentry-sdk[fastapi]==2.19.2
+
 # ─── Utils ───────────────────────────────────────────
 pydantic[email]==2.10.3
 pydantic-settings==2.6.1
