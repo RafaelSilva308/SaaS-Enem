@@ -10,6 +10,7 @@ import { toast } from "sonner"
 
 import { api } from "@/lib/api"
 import { CheckoutModal } from "@/components/subscription/CheckoutModal"
+import { PlanSelectModal, type PremiumPlan } from "@/components/subscription/PlanSelectModal"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -87,6 +88,7 @@ export default function BillingPage() {
   const [canceling, setCanceling] = useState(false)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [chosenPlan, setChosenPlan] = useState<PremiumPlan | null>(null)
 
   async function fetchSub() {
     setLoading(true)
@@ -261,12 +263,18 @@ export default function BillingPage() {
           />
         )}
         {showUpgrade && (
-          <CheckoutModal
-            planId="premium_3m"
-            planName="3 meses"
-            planPrice={99.90}
-            onSuccess={() => { setShowUpgrade(false); fetchSub() }}
+          <PlanSelectModal
+            onSelect={(plan) => { setShowUpgrade(false); setChosenPlan(plan) }}
             onClose={() => setShowUpgrade(false)}
+          />
+        )}
+        {chosenPlan && (
+          <CheckoutModal
+            planId={chosenPlan.id}
+            planName={chosenPlan.label}
+            planPrice={chosenPlan.price}
+            onSuccess={() => { setChosenPlan(null); fetchSub() }}
+            onClose={() => setChosenPlan(null)}
           />
         )}
       </AnimatePresence>
