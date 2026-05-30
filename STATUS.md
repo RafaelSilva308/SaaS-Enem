@@ -1,6 +1,6 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-26 (revisão de segurança + importação das provas do ENEM)
+> **Última atualização:** 2026-05-28 (UptimeRobot + Sentry configurados)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
 
 ---
@@ -290,10 +290,10 @@ Todas são mudanças de código apenas — sem alteração de infraestrutura. Re
 
 | # | Prioridade | Esforço | Arquivo | O que fazer |
 |---|-----------|---------|---------|------------|
-| 1 | Alta | ~1h | `backend/app/services/performance_service.py` | Adicionar cache Redis (TTL 10–30min) nos 4 endpoints de `/performance/*` — fazem 4+ queries de agregação sem nenhum cache hoje |
-| 2 | Alta | ~1h | `backend/app/services/admin_service.py:340` | Corrigir N+1 query: trocar loop de 20 queries individuais de opções por uma única query `WHERE question_id IN (...)` |
+| 1 | ~~Alta~~ | ~~1h~~ | ~~`backend/app/services/performance_service.py`~~ | ✅ Cache Redis (TTL 30min) nos 6 endpoints `/performance/*` na camada de rota (padrão `dashboard.py`). Chaves `perf:{user_id}:*`, invalidadas em `submit_exam` |
+| 2 | ~~Alta~~ | ~~1h~~ | ~~`backend/app/services/admin_service.py:340`~~ | ✅ N+1 corrigido: opções da página carregadas em 1 query `WHERE question_id IN (...)`, agrupadas por questão. Builder puro `_build_question_item` compartilhado |
 | 3 | Média | ~15min | `frontend/src/app/(app)/dashboard/page.tsx:170` | Trocar chamadas sequenciais `/dashboard` + `/contingency/status` por `Promise.all()` |
-| 4 | Média | ~30min | Páginas que usam recharts | Trocar import estático do recharts por `dynamic(() => import('recharts'), { ssr: false })` para evitar que ~245KB sejam carregados em todas as páginas |
+| 4 | ~~Média~~ | ~~30min~~ | ~~Páginas que usam recharts~~ | ✅ Páginas já usavam SVG/HTML inline — 4 componentes recharts eram código morto. Removidos + recharts desinstalado (`e52fbce`) |
 | 5 | Baixa | ~30min | Nova migration Alembic | Adicionar índice composto `(subject, year)` na tabela `questions` — filtro mais comum no banco de questões sem índice composto |
 | 6 | Alta (futuro) | Dias | `frontend/src/app/(app)/` | Migrar páginas pesadas (`/banco-questoes`, `/desempenho`, `/analise-comparativa`) de `"use client"` para Next.js Server Components — entrega HTML pronto ao usuário |
 
@@ -436,8 +436,8 @@ Extrair validação de senha para função compartilhada e aplicar em `RegisterR
 | Bugs críticos | 3 | 3 | 0 | 0 |
 | Bugs significativos | 2 | 1 | 0 | 1 |
 | Segurança | 2 | 2 | 0 | 0 |
-| Observabilidade | 2 | 0 | 2 | 0 |
-| Testes de fumaça | 10 fluxos | 0 | 10 | 0 |
+| Observabilidade | 2 | 2 | 0 | 0 |
+| Testes de fumaça | 12 fluxos | 0 | 12 | 0 |
 | Lançamento | 4 | 0 | 4 | 0 |
 
 ---
@@ -480,12 +480,12 @@ Extrair validação de senha para função compartilhada e aplicar em `RegisterR
 
 ---
 
-### Observabilidade — PENDENTE ❌
+### Observabilidade — CONCLUÍDO ✅
 
-| Item | O que é | O que fazer |
-|------|---------|------------|
-| **UptimeRobot** | Monitora se o backend está online e alerta por e-mail se cair | Criar conta em uptimerobot.com → Add Monitor → HTTP(s) → URL: `https://backend-production-2daa.up.railway.app/health` → intervalo 5 min → e-mail de alerta |
-| **Sentry** | Captura erros em tempo real com stack trace, contexto e frequência | Criar conta em sentry.io → criar projeto Python (backend) e Next.js (frontend) → instalar `sentry-sdk` no Railway + `@sentry/nextjs` no Vercel → adicionar `SENTRY_DSN` como env var nos dois |
+| Item | O que é | Status |
+|------|---------|--------|
+| **UptimeRobot** | Monitora se o backend está online e alerta por e-mail se cair | ✅ Monitor HTTP ativo em `https://backend-production-2daa.up.railway.app/health` · intervalo 5 min · alerta para `rafael.lome301.1510@gmail.com` |
+| **Sentry** | Captura erros em tempo real com stack trace, contexto e frequência | ✅ Projeto `python` (FastAPI) + projeto `javascript-nextjs` no Sentry · `SENTRY_DSN` no Railway · `NEXT_PUBLIC_SENTRY_DSN` no Vercel · commit `932302f` |
 
 ---
 

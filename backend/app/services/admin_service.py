@@ -287,13 +287,8 @@ async def delete_user(user_id: str, session: AsyncSession) -> None:
 
 # ── Questions ──────────────────────────────────────────────────────
 
-async def _question_with_options(q: Question, session: AsyncSession) -> AdminQuestionItem:
-    opts_r = await session.exec(
-        select(QuestionOption)
-        .where(QuestionOption.question_id == q.id)
-        .order_by(QuestionOption.position)  # type: ignore[arg-type]
-    )
-    opts = [AdminQuestionOptionIn(letter=o.letter, text=o.text) for o in opts_r.all()]
+def _build_question_item(q: Question, opts: list[QuestionOption]) -> AdminQuestionItem:
+    """Monta o item de resposta a partir da questão e suas opções já carregadas."""
     return AdminQuestionItem(
         id=str(q.id),
         source=q.source,
@@ -303,9 +298,18 @@ async def _question_with_options(q: Question, session: AsyncSession) -> AdminQue
         year=q.year,
         statement=q.statement,
         correct_answer=q.correct_answer,
-        options=opts,
+        options=[AdminQuestionOptionIn(letter=o.letter, text=o.text) for o in opts],
         created_at=q.created_at.isoformat(),
     )
+
+
+async def _question_with_options(q: Question, session: AsyncSession) -> AdminQuestionItem:
+    opts_r = await session.exec(
+        select(QuestionOption)
+        .where(QuestionOption.question_id == q.id)
+        .order_by(QuestionOption.position)  # type: ignore[arg-type]
+    )
+    return _build_question_item(q, list(opts_r.all()))
 
 
 async def list_questions(
@@ -337,7 +341,19 @@ async def list_questions(
     )
     questions = qs_r.all()
 
-    items = [await _question_with_options(q, session) for q in questions]
+    # Carrega todas as opções da página em uma única query (evita N+1)
+    q_ids = [q.id for q in questions]
+    opts_by_qid: dict[uuid.UUID, list[QuestionOption]] = {}
+    if q_ids:
+        opts_r = await session.exec(
+            select(QuestionOption)
+            .where(QuestionOption.question_id.in_(q_ids))  # type: ignore[arg-type]
+            .order_by(QuestionOption.position)  # type: ignore[arg-type]
+        )
+        for o in opts_r.all():
+            opts_by_qid.setdefault(o.question_id, []).append(o)
+
+    items = [_build_question_item(q, opts_by_qid.get(q.id, [])) for q in questions]
     return AdminQuestionsResponse(items=items, total=total, page=page, per_page=per_page)
 
 
