@@ -44,6 +44,25 @@ SUBJECT_LABELS = {
 MLE_MIN_ITEMS = 3
 
 
+# ── Cache ──────────────────────────────────────────────────────────
+
+async def invalidate_performance_cache(user_id) -> None:
+    """
+    Remove todas as entradas de cache de /performance/* deste usuário.
+    Chamada quando os dados de desempenho mudam (ex.: submeter um simulado).
+    As chaves seguem o padrão `perf:{user_id}:*` definido nas rotas.
+    """
+    from app.core.redis import get_redis
+
+    try:
+        redis = await get_redis()
+        keys = [key async for key in redis.scan_iter(match=f"perf:{user_id}:*")]
+        if keys:
+            await redis.delete(*keys)
+    except Exception:
+        pass
+
+
 # ── TRI por resultado ──────────────────────────────────────────────
 
 async def calculate_tri_for_result(result: ExamResult, db: AsyncSession) -> None:

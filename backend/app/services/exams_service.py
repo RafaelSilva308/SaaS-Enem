@@ -444,6 +444,9 @@ async def submit_exam(
     await db.refresh(result)
     await performance_service.calculate_tri_for_result(result, db)
 
+    # Invalidar cache de /performance/* — o novo simulado mudou os dados
+    await performance_service.invalidate_performance_cache(user.id)
+
     # XP por completar simulado
     try:
         from app.services.gamification_service import award_xp
