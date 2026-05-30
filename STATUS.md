@@ -297,6 +297,14 @@ Todas são mudanças de código apenas — sem alteração de infraestrutura. Re
 | 5 | Baixa | ~30min | Nova migration Alembic | Adicionar índice composto `(subject, year)` na tabela `questions` — filtro mais comum no banco de questões sem índice composto |
 | 6 | Alta (futuro) | Dias | `frontend/src/app/(app)/` | Migrar páginas pesadas (`/banco-questoes`, `/desempenho`, `/analise-comparativa`) de `"use client"` para Next.js Server Components — entrega HTML pronto ao usuário |
 
+> **Sessão 2026-05-30 — execução e estado de deploy:**
+> - **Item 1** ✅ commit `a66a5a5` — push feito, deploy Railway concluído e **verificado em produção** (`/health` 200, `redis: true`).
+> - **Item 4** ✅ commit `e52fbce` — push feito, deploy Vercel. Era código morto (componentes recharts sem importador); páginas já usavam SVG/HTML inline.
+> - **Item 2** ✅ commit `bcd3116` — ⚠️ **commit local, push PENDENTE** — backend ainda não deployado com este fix.
+> - **Item 3** ⏸️ Pendente por decisão. As duas chamadas já disparam em paralelo (fire-and-forget, sem `await` entre elas); `Promise.all` seria só cosmético, sem ganho de rede. Foi aplicado e revertido nesta sessão.
+> - **Item 5** ⏸️ Pendente. Ganho imperceptível hoje (1.558 questões → Postgres resolve em ms); útil só quando a tabela crescer. Exige rodar a migration manualmente no Railway (`alembic upgrade head` — migrations **não** rodam no deploy). Foi aplicado e revertido nesta sessão.
+> - **Item 6** — futuro (dias de trabalho), inalterado.
+
 **Detalhes técnicos de cada item:**
 
 **Item 1 — Cache performance:**
