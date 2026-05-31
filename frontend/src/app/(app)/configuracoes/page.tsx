@@ -247,8 +247,8 @@ export default function ConfiguracoesPage() {
                 <div className="grid-3" style={{ gap: 12 }}>
                   {[
                     { name: "Gratuito", price: "R$ 0", suffix: "/mês", features: ["50 questões/mês", "1 redação/mês", "Plano básico"], current: false },
-                    { name: "Pro Mensal", price: "R$ 59,90", suffix: "/mês", features: ["Questões ilimitadas", "Redações ilimitadas", "Análise IA", "Simulados completos"], current: false },
-                    { name: "Pro Semestral", price: "R$ 149,90", suffix: "/6m", features: ["Tudo do Pro Mensal", "Melhor custo-benefício", "Mentoria IA dedicada"], current: true, badge: "Atual" },
+                    { name: "Pro Mensal", price: "R$ 59,90", suffix: "/mês", features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"], current: false },
+                    { name: "Pro Semestral", price: "R$ 149,90", suffix: "/6m", features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"], current: true, badge: "Atual" },
                   ].map((p, i) => (
                     <div key={i} className="card" style={{ padding: 20, border: `1px solid ${p.current ? "rgba(37,99,235,0.5)" : "var(--border)"}`, boxShadow: p.current ? "0 0 24px rgba(37,99,235,0.18)" : "none", position: "relative" }}>
                       {p.badge && <span className="badge badge-primary" style={{ position: "absolute", top: 12, right: 12 }}>{p.badge}</span>}

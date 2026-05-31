@@ -17,13 +17,14 @@ export interface PremiumPlan {
 }
 
 // Espelha os planos premium do onboarding (StepPlan) e do GET /subscriptions/plans.
+// Todos os planos têm AS MESMAS funcionalidades — a diferença é só o desconto por período.
 export const PREMIUM_PLANS: PremiumPlan[] = [
   { id: "premium_1m", label: "1 mês", price: 59.90, period: "/mês", highlight: false,
-    features: ["Plano completo", "Simulados ilimitados", "Score TRI", "Correção de redação IA"] },
+    features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"] },
   { id: "premium_3m", label: "3 meses", price: 99.90, period: "/trimestre", highlight: true,
-    features: ["Tudo do 1 mês", "Análise comparativa", "Mentoria 1x/mês"] },
+    features: ["Tudo do plano mensal", "Ótimo custo-benefício"] },
   { id: "premium_6m", label: "6 meses", price: 149.90, period: "/semestre", highlight: false,
-    features: ["Tudo do 3 meses", "Mentoria 2x/mês", "Suporte prioritário"] },
+    features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"] },
 ]
 
 interface Props {
