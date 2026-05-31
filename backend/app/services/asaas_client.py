@@ -57,8 +57,8 @@ async def get_or_create_customer(email: str, name: str, cpf_cnpj: str | None = N
 # ── Subscriptions ─────────────────────────────────────────────────
 
 BILLING_CYCLES = {
-    "premium_1m": {"cycle": "MONTHLY",   "value": 59.90, "label": "Mensal"},
-    "premium_3m": {"cycle": "QUARTERLY", "value": 99.90, "label": "Trimestral"},
+    "premium_1m": {"cycle": "MONTHLY",   "value": 29.90, "label": "Mensal"},
+    "premium_3m": {"cycle": "QUARTERLY", "value": 79.90, "label": "Trimestral"},
     "premium_6m": {"cycle": "SEMIANNUAL","value": 149.90,"label": "Semestral"},
 }
 
@@ -126,7 +126,7 @@ async def cancel_subscription(asaas_subscription_id: str) -> dict:
 
 async def get_subscription_payments(asaas_subscription_id: str) -> list[dict]:
     if _mock_mode():
-        return [{"id": f"mock_pay_{asaas_subscription_id}", "status": "PENDING", "value": 59.90}]
+        return [{"id": f"mock_pay_{asaas_subscription_id}", "status": "PENDING", "value": 29.90}]
 
     async with httpx.AsyncClient(base_url=_base_url(), headers=_headers(), timeout=30) as client:
         resp = await client.get("/payments", params={"subscription": asaas_subscription_id})
@@ -138,7 +138,7 @@ async def get_pix_qr_code(payment_id: str) -> dict:
     if _mock_mode():
         return {
             "encodedImage": "",  # base64 vazio em dev
-            "payload": "00020126580014BR.GOV.BCB.PIX0136mock-pix-key-for-dev-environment5204000053039865406" + "59.905802BR5913SaaS ENEM Dev6009SAO PAULO62070503***6304MOCK",
+            "payload": "00020126580014BR.GOV.BCB.PIX0136mock-pix-key-for-dev-environment5204000053039865406" + "29.905802BR5913SaaS ENEM Dev6009SAO PAULO62070503***6304MOCK",
             "expirationDate": (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=24)).isoformat(),
         }
 

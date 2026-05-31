@@ -28,8 +28,8 @@ from app.schemas.admin import (
 
 # MRR mensal por plano
 _PLAN_MRR: dict[str, float] = {
-    "premium_1m": 59.90,
-    "premium_3m": 33.30,   # 99.90 / 3
+    "premium_1m": 29.90,
+    "premium_3m": 26.63,   # 79.90 / 3
     "premium_6m": 24.98,   # 149.90 / 6
     "premium_trial": 0.0,
     "free": 0.0,
