@@ -29,12 +29,12 @@ const NOTIF_ITEMS = [
 
 // Apenas planos pagos — todos com as MESMAS funcionalidades; a diferença é só o desconto.
 const PAID_PLANS = [
-  { id: "premium_1m", name: "1 mês",   price: "R$ 59,90",  suffix: "/mês",       highlight: false,
+  { id: "premium_1m", name: "1 mês",   price: "R$ 29,90",  suffix: "/mês",       perMonth: "R$ 29,90/mês", discount: null,  highlight: false,
     features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"] },
-  { id: "premium_3m", name: "3 meses", price: "R$ 99,90",  suffix: "/trimestre", highlight: true,
-    features: ["Tudo do plano mensal", "Ótimo custo-benefício"] },
-  { id: "premium_6m", name: "6 meses", price: "R$ 149,90", suffix: "/semestre",  highlight: false,
-    features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"] },
+  { id: "premium_3m", name: "3 meses", price: "R$ 79,90",  suffix: "/trimestre", perMonth: "R$ 26,63/mês", discount: "−11%", highlight: false,
+    features: ["Tudo do plano mensal", "Economia de R$ 9,80 vs. mensal"] },
+  { id: "premium_6m", name: "6 meses", price: "R$ 149,90", suffix: "/semestre",  perMonth: "R$ 24,98/mês", discount: "−17%", highlight: true,
+    features: ["Tudo dos planos anteriores", "Melhor custo-benefício", "Economia de R$ 29,50 vs. mensal"] },
 ]
 
 const PLAN_LABELS: Record<string, string> = {
@@ -269,19 +269,31 @@ export default function ConfiguracoesPage() {
                   </div>
                 </div>
 
+                {/* Urgency banner */}
+                <div className="row" style={{ gap: 8, padding: "10px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                  <span style={{ fontSize: 13 }}>⏰</span>
+                  <span style={{ fontSize: 12.5, color: "#fcd34d", fontWeight: 500 }}>Preço de lançamento · válido por tempo limitado</span>
+                </div>
+
                 <div className="grid-3" style={{ gap: 12 }}>
                   {PAID_PLANS.map((p) => {
                     const current = sub?.plan_type === p.id
                     return (
-                      <div key={p.id} className="card" style={{ padding: 20, border: `1px solid ${current ? "rgba(37,99,235,0.5)" : "var(--border)"}`, boxShadow: current ? "0 0 24px rgba(37,99,235,0.18)" : "none", position: "relative" }}>
+                      <div key={p.id} className="card" style={{ padding: 20, border: `1px solid ${current ? "rgba(37,99,235,0.5)" : p.highlight ? "rgba(16,185,129,0.35)" : "var(--border)"}`, boxShadow: current ? "0 0 24px rgba(37,99,235,0.18)" : p.highlight ? "0 0 20px rgba(16,185,129,0.1)" : "none", position: "relative" }}>
                         {current
                           ? <span className="badge badge-primary" style={{ position: "absolute", top: 12, right: 12 }}>Atual</span>
-                          : p.highlight && <span className="badge badge-success" style={{ position: "absolute", top: 12, right: 12 }}>Mais popular</span>}
-                        <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
-                        <div className="row" style={{ alignItems: "baseline", gap: 4, margin: "12px 0" }}>
+                          : p.highlight && <span className="badge badge-success" style={{ position: "absolute", top: 12, right: 12 }}>Cobre o ENEM</span>}
+                        <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
+                        {p.discount && (
+                          <span style={{ display: "inline-block", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: "rgba(16,185,129,0.12)", color: "#34d399", border: "1px solid rgba(16,185,129,0.25)", marginBottom: 6 }}>
+                            {p.discount}
+                          </span>
+                        )}
+                        <div className="row" style={{ alignItems: "baseline", gap: 4, marginBottom: 2 }}>
                           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em" }}>{p.price}</div>
                           <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>{p.suffix}</div>
                         </div>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: "rgba(96,165,250,0.85)", marginBottom: 12 }}>{p.perMonth}</div>
                         <div className="col" style={{ gap: 8, marginBottom: 14 }}>
                           {p.features.map((f, j) => (
                             <div key={j} className="row" style={{ gap: 8, fontSize: 12.5 }}>
