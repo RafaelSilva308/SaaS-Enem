@@ -27,6 +27,23 @@ const NOTIF_ITEMS = [
   { id: "marketing",   label: "Novidades e promoções",               desc: "Atualizações do produto e ofertas" },
 ]
 
+// Apenas planos pagos — todos com as MESMAS funcionalidades; a diferença é só o desconto.
+const PAID_PLANS = [
+  { id: "premium_1m", name: "1 mês",   price: "R$ 59,90",  suffix: "/mês",       highlight: false,
+    features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"] },
+  { id: "premium_3m", name: "3 meses", price: "R$ 99,90",  suffix: "/trimestre", highlight: true,
+    features: ["Tudo do plano mensal", "Ótimo custo-benefício"] },
+  { id: "premium_6m", name: "6 meses", price: "R$ 149,90", suffix: "/semestre",  highlight: false,
+    features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"] },
+]
+
+const PLAN_LABELS: Record<string, string> = {
+  free: "Plano Grátis",
+  premium_1m: "ENEM Pro · 1 mês",
+  premium_3m: "ENEM Pro · 3 meses",
+  premium_6m: "ENEM Pro · 6 meses",
+}
+
 function SwitchToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button onClick={onToggle} style={{ width: 38, height: 22, borderRadius: 999, background: on ? "var(--primary)" : "rgba(30,41,59,0.8)", border: `1px solid ${on ? "var(--primary)" : "var(--border-strong)"}`, position: "relative", cursor: "pointer", transition: "all 200ms", flexShrink: 0, boxShadow: on ? "0 0 12px rgba(37,99,235,0.4)" : "none" }}>
@@ -48,9 +65,11 @@ export default function ConfiguracoesPage() {
   const [pwdForm, setPwdForm] = useState({ current: "", new: "", confirm: "" })
   const [changingPwd, setChangingPwd] = useState(false)
   const [diagScores, setDiagScores] = useState<{ subject: string; label: string; level: string }[]>([])
+  const [sub, setSub] = useState<{ plan_type: string; status: string; days_remaining: number } | null>(null)
 
   useEffect(() => {
     api.get("/diagnostic/result").then(r => setDiagScores(r.data?.scores ?? [])).catch(() => {})
+    api.get("/subscriptions/me").then(r => setSub(r.data)).catch(() => setSub(null))
   }, [])
 
   const handleExport = async () => {
@@ -233,8 +252,14 @@ export default function ConfiguracoesPage() {
                   <div className="row between" style={{ position: "relative" }}>
                     <div className="col" style={{ gap: 6 }}>
                       <span className="badge badge-premium" style={{ alignSelf: "flex-start" }}>✦ Plano atual</span>
-                      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.025em" }}>ENEM Pro <span className="text-gradient-brand">Premium</span></div>
-                      <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>Trial · 7 dias gratuitos</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.025em" }}>
+                        {sub ? (PLAN_LABELS[sub.plan_type] ?? sub.plan_type) : "Plano Grátis"}
+                      </div>
+                      <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>
+                        {sub && sub.plan_type !== "free"
+                          ? `${sub.status === "trialing" ? "Trial · " : ""}${sub.days_remaining} dias restantes`
+                          : "Funcionalidades limitadas · faça upgrade para o Premium"}
+                      </div>
                     </div>
                     <div className="col" style={{ gap: 8 }}>
                       <Link href="/configuracoes/billing">
@@ -245,34 +270,35 @@ export default function ConfiguracoesPage() {
                 </div>
 
                 <div className="grid-3" style={{ gap: 12 }}>
-                  {[
-                    { name: "Gratuito", price: "R$ 0", suffix: "/mês", features: ["50 questões/mês", "1 redação/mês", "Plano básico"], current: false },
-                    { name: "Pro Mensal", price: "R$ 59,90", suffix: "/mês", features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"], current: false },
-                    { name: "Pro Semestral", price: "R$ 149,90", suffix: "/6m", features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"], current: true, badge: "Atual" },
-                  ].map((p, i) => (
-                    <div key={i} className="card" style={{ padding: 20, border: `1px solid ${p.current ? "rgba(37,99,235,0.5)" : "var(--border)"}`, boxShadow: p.current ? "0 0 24px rgba(37,99,235,0.18)" : "none", position: "relative" }}>
-                      {p.badge && <span className="badge badge-primary" style={{ position: "absolute", top: 12, right: 12 }}>{p.badge}</span>}
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
-                      <div className="row" style={{ alignItems: "baseline", gap: 4, margin: "12px 0" }}>
-                        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em" }}>{p.price}</div>
-                        <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>{p.suffix}</div>
+                  {PAID_PLANS.map((p) => {
+                    const current = sub?.plan_type === p.id
+                    return (
+                      <div key={p.id} className="card" style={{ padding: 20, border: `1px solid ${current ? "rgba(37,99,235,0.5)" : "var(--border)"}`, boxShadow: current ? "0 0 24px rgba(37,99,235,0.18)" : "none", position: "relative" }}>
+                        {current
+                          ? <span className="badge badge-primary" style={{ position: "absolute", top: 12, right: 12 }}>Atual</span>
+                          : p.highlight && <span className="badge badge-success" style={{ position: "absolute", top: 12, right: 12 }}>Mais popular</span>}
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>{p.name}</div>
+                        <div className="row" style={{ alignItems: "baseline", gap: 4, margin: "12px 0" }}>
+                          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em" }}>{p.price}</div>
+                          <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>{p.suffix}</div>
+                        </div>
+                        <div className="col" style={{ gap: 8, marginBottom: 14 }}>
+                          {p.features.map((f, j) => (
+                            <div key={j} className="row" style={{ gap: 8, fontSize: 12.5 }}>
+                              <Check size={13} color="#34d399" /> <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {current ? (
+                          <button className="btn btn-secondary" style={{ width: "100%" }} disabled>Plano atual</button>
+                        ) : (
+                          <Link href="/configuracoes/billing">
+                            <button className="btn btn-brand" style={{ width: "100%" }}>Assinar</button>
+                          </Link>
+                        )}
                       </div>
-                      <div className="col" style={{ gap: 8, marginBottom: 14 }}>
-                        {p.features.map((f, j) => (
-                          <div key={j} className="row" style={{ gap: 8, fontSize: 12.5 }}>
-                            <Check size={13} color="#34d399" /> <span>{f}</span>
-                          </div>
-                        ))}
-                      </div>
-                      {p.current ? (
-                        <button className="btn btn-secondary" style={{ width: "100%" }} disabled>Plano atual</button>
-                      ) : (
-                        <Link href="/configuracoes/billing">
-                          <button className="btn btn-brand" style={{ width: "100%" }}>Mudar para este</button>
-                        </Link>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </>
             )}
