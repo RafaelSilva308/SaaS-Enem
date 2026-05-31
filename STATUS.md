@@ -1,7 +1,30 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-31 (performance + correção do fluxo de planos)
+> **Última atualização:** 2026-05-31 (remoção do trial + cobrança imediata)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
+
+---
+
+## Sessão 2026-05-31 (2ª) — Remoção do Trial / Cobrança Imediata
+
+Tudo abaixo foi implementado, commitado (`59242c5`), **pushed e deployado** (Vercel ✅ + Railway ✅ verificados).
+
+### Mudança de produto: sem trial, cobrança no ato da assinatura
+
+**Decisão:** o período de trial de 7 dias foi removido. A partir de agora, ao confirmar uma assinatura, o usuário é cobrado imediatamente — sem período gratuito de teste.
+
+| Arquivo | O que mudou |
+|---------|------------|
+| `subscription_service.py` | `trial_days=0` nos 3 planos; `_get_active_subscription` filtra só `"active"` (removido `"trialing"`); `_create_mock_subscription` cria `status="active"` com duração real; `_create_stripe_subscription` remove `trial_end` do `s.Subscription.create()`; status inicial `"active"` (era `"trialing"`); `end_date` sem o `+ 7` de bônus; cartão usa `payment_intent.client_secret` em vez de `pending_setup_intent` |
+| `asaas_client.py` | `trial_days` padrão: `7 → 0` |
+| `CheckoutModal.tsx` | `confirmCardSetup` → `confirmCardPayment`; polling PIX aguarda só `status === "active"`; todos os textos de "7 dias grátis/trial" removidos |
+| `PlanSelectModal.tsx` | Botão: "Iniciar trial de 7 dias" → "Assinar"; subtítulo e rodapé atualizados |
+| `onboarding/page.tsx` | Mesmos ajustes de copy |
+| `configuracoes/page.tsx` | Removido prefixo "Trial · " no label de dias restantes |
+| `configuracoes/billing/page.tsx` | Status `"trialing"` exibe "Em trial" (backward-compat para assinantes antigos) |
+| `termos/page.tsx` | Cláusula 3.3: "7 dias de período de teste gratuito" → "pagamento processado imediatamente" |
+
+**Compatibilidade com banco:** nenhuma migration necessária. O campo `status` continua suportando `"trialing"` para assinantes que já existiam. O webhook `invoice.payment_succeeded` e o `status_map` do Stripe continuam mapeando `"trialing"` corretamente.
 
 ---
 
@@ -161,7 +184,7 @@ cd frontend && vercel deploy --prod
 ### Assinaturas (`/api/v1/subscriptions/`)
 - `GET /plans` — 4 planos com features (free/1m/3m/6m)
 - `POST /activate-free` — ativa freemium sem pagamento
-- `POST /create` — cria Stripe Customer + Subscription com trial 7 dias
+- `POST /create` — cria Stripe Customer + Subscription com cobrança imediata (sem trial)
 - `GET /me` — status, dias restantes, método, auto_renewal
 - `POST /cancel` — desativa via `cancel_at_period_end` Stripe
 - `POST /webhook` — processa eventos Stripe (subscription.updated, invoice.payment_succeeded etc.)
@@ -604,6 +627,7 @@ Todos os fluxos abaixo precisam ser testados **manualmente em produção** (enem
 ## Histórico de Commits
 
 ```
+59242c5  feat: remove trial period — charge immediately on subscription
 9dcf812  ci: remove redundant Railway deploy workflow
 0d07888  chore: bump version to 1.1.0 to test Railway auto-deploy
 5691b4e  ci: hardcode Railway service ID in deploy workflow
