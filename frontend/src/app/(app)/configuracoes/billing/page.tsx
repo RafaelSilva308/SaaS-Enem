@@ -35,7 +35,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   active:   { label: "Ativo",             color: "text-secondary", icon: CheckCircle },
-  trialing: { label: "Trial (7 dias)",    color: "text-primary",   icon: ShieldCheck },
+  trialing: { label: "Em trial",          color: "text-primary",   icon: ShieldCheck },
   past_due: { label: "Pagamento pendente",color: "text-yellow-400",icon: AlertCircle },
   canceled: { label: "Cancelado",         color: "text-destructive",icon: XCircle },
   free:     { label: "Gratuito",          color: "text-muted-foreground", icon: CheckCircle },

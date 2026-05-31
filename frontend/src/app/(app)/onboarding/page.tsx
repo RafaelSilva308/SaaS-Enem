@@ -392,7 +392,7 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
       <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-1">Escolha seu plano</h2>
-          <p className="text-muted-foreground text-sm">Comece com 7 dias grátis · cancele quando quiser</p>
+          <p className="text-muted-foreground text-sm">Cobrado imediatamente · cancele quando quiser</p>
         </div>
 
         {/* Urgency banner */}
@@ -440,10 +440,10 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
 
         <Button onClick={() => setShowCheckout(true)} disabled={loading} className="w-full gradient-brand hover:opacity-90 font-semibold">
           {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Sparkles size={16} className="mr-2" />}
-          {loading ? "Aguarde…" : `Iniciar trial de 7 dias — ${selectedPlan.label}`}
+          {loading ? "Aguarde…" : `Assinar — ${selectedPlan.label}`}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          7 dias grátis, cancele antes sem cobrança. Pagamento seguro via Stripe.
+          Cancele quando quiser. Pagamento seguro via Stripe.
         </p>
       </motion.div>
 

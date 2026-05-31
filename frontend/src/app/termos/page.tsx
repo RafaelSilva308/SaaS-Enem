@@ -24,7 +24,7 @@ const SECTIONS = [
     title: "3. Planos e pagamentos",
     content: `3.1. Oferecemos um plano gratuito (Freemium) com funcionalidades limitadas e planos pagos (Premium) com acesso completo.
 3.2. Os preços são: R$29,90/mês, R$79,90/trimestre ou R$149,90/semestre, cobrados via Stripe (cartão de crédito).
-3.3. Planos pagos incluem 7 dias de período de teste gratuito.
+3.3. O pagamento é processado imediatamente após a confirmação da assinatura.
 3.4. O cancelamento pode ser feito a qualquer momento. O acesso permanece ativo até o final do período pago.
 3.5. Não há reembolso proporcional por cancelamento antecipado, exceto em casos previstos pelo Código de Defesa do Consumidor.`,
   },

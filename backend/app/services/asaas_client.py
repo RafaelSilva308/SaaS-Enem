@@ -75,7 +75,7 @@ async def create_subscription(
     billing_method: str,
     credit_card: dict | None = None,
     credit_card_holder: dict | None = None,
-    trial_days: int = 7,
+    trial_days: int = 0,
 ) -> dict:
     cycle_info = BILLING_CYCLES[plan_type]
     next_due = (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(days=trial_days)).strftime("%Y-%m-%d")

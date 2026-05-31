@@ -78,7 +78,7 @@ function PixView({ data, onSuccess }: { data: CheckoutData; onSuccess: () => voi
     intervalRef.current = setInterval(async () => {
       try {
         const { data: sub } = await api.get("/subscriptions/me")
-        if (sub.status === "active" || sub.status === "trialing") {
+        if (sub.status === "active") {
           clearInterval(intervalRef.current!)
           setConfirmed(true)
           setTimeout(onSuccess, 1500)
@@ -202,7 +202,7 @@ function CardSetupView({ clientSecret, onSuccess }: { clientSecret: string; onSu
     if (!cardElement) return
 
     setLoading(true)
-    const { error } = await stripe.confirmCardSetup(clientSecret, {
+    const { error } = await stripe.confirmCardPayment(clientSecret, {
       payment_method: { card: cardElement },
     })
     setLoading(false)
@@ -212,7 +212,7 @@ function CardSetupView({ clientSecret, onSuccess }: { clientSecret: string; onSu
       return
     }
 
-    toast.success("Cartão vinculado! Bem-vindo ao ENEM Pro Premium.")
+    toast.success("Pagamento confirmado! Bem-vindo ao Premium.")
     onSuccess()
   }
 
@@ -292,7 +292,7 @@ export function CheckoutModal({ planId, planName, planPrice, onSuccess, onClose 
           <div>
             <h2 className="text-lg font-bold">Checkout — {planName}</h2>
             <p className="text-sm text-muted-foreground">
-              R$ {planPrice.toFixed(2).replace(".", ",")} · 7 dias grátis
+              R$ {planPrice.toFixed(2).replace(".", ",")} · cobrado imediatamente
             </p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -337,7 +337,7 @@ export function CheckoutModal({ planId, planName, planPrice, onSuccess, onClose 
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                Trial de 7 dias gratuito. Cancele antes sem cobrança.
+                Cancele quando quiser. Pagamento seguro via Stripe.
               </p>
             </motion.div>
           ) : checkoutData.payment_method === "pix" ? (

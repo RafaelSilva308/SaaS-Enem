@@ -257,7 +257,7 @@ export default function ConfiguracoesPage() {
                       </div>
                       <div style={{ fontSize: 13, color: "var(--muted-foreground)" }}>
                         {sub && sub.plan_type !== "free"
-                          ? `${sub.status === "trialing" ? "Trial · " : ""}${sub.days_remaining} dias restantes`
+                          ? `${sub.days_remaining} dias restantes`
                           : "Funcionalidades limitadas · faça upgrade para o Premium"}
                       </div>
                     </div>

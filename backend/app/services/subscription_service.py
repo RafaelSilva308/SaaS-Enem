@@ -82,7 +82,7 @@ PLANS: list[PlanResponse] = [
         price_brl=29.90,
         period_label="por mês",
         highlight=False,
-        trial_days=7,
+        trial_days=0,
         features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
     PlanResponse(
@@ -91,7 +91,7 @@ PLANS: list[PlanResponse] = [
         price_brl=79.90,
         period_label="por trimestre",
         highlight=False,
-        trial_days=7,
+        trial_days=0,
         features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
     PlanResponse(
@@ -100,7 +100,7 @@ PLANS: list[PlanResponse] = [
         price_brl=149.90,
         period_label="por semestre",
         highlight=True,  # "Melhor opção" — cobre todo o período até o ENEM
-        trial_days=7,
+        trial_days=0,
         features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
 ]
@@ -132,7 +132,7 @@ async def _get_active_subscription(user_id: uuid.UUID, session: AsyncSession) ->
     result = await session.exec(
         select(Subscription)
         .where(Subscription.user_id == user_id)
-        .where(Subscription.status.in_(["active", "trialing"]))  # type: ignore[attr-defined]
+        .where(Subscription.status.in_(["active"]))  # type: ignore[attr-defined]
         .order_by(Subscription.created_at.desc())  # type: ignore[attr-defined]
     )
     return result.first()
@@ -208,15 +208,14 @@ async def _create_mock_subscription(
 ) -> CheckoutSessionResponse:
     """Cria assinatura fictícia para desenvolvimento sem Stripe configurado."""
     now = utcnow()
-    trial_end = now + timedelta(days=7)
 
     sub = Subscription(
         id=uuid.uuid4(),
         user_id=user.id,
         plan_type=data.plan_type,
-        status="trialing",
+        status="active",
         start_date=now,
-        end_date=trial_end,
+        end_date=now + timedelta(days=PLAN_DURATIONS_DAYS[data.plan_type]),
         payment_method=data.payment_method,
         amount_paid=PLAN_PRICES[data.plan_type],
         stripe_subscription_id=f"mock_sub_{uuid.uuid4().hex[:8]}",
@@ -268,7 +267,6 @@ async def _create_stripe_subscription(
 
     customer_id = await _get_or_create_stripe_customer(user)
     now = utcnow()
-    trial_end_ts = int((now + timedelta(days=7)).timestamp())
 
     payment_method_types = {
         "pix": ["pix"],
@@ -276,11 +274,9 @@ async def _create_stripe_subscription(
         "credit_card": ["card"],
     }
 
-    # Criar subscription com trial
     stripe_sub = s.Subscription.create(
         customer=customer_id,
         items=[{"price": price_id}],
-        trial_end=trial_end_ts,
         payment_settings={
             "payment_method_types": payment_method_types[data.payment_method],
             "save_default_payment_method": "on_subscription",
@@ -294,9 +290,9 @@ async def _create_stripe_subscription(
         id=uuid.uuid4(),
         user_id=user.id,
         plan_type=data.plan_type,
-        status="trialing",
+        status="active",
         start_date=now,
-        end_date=now + timedelta(days=PLAN_DURATIONS_DAYS[data.plan_type] + 7),
+        end_date=now + timedelta(days=PLAN_DURATIONS_DAYS[data.plan_type]),
         payment_method=data.payment_method,
         amount_paid=PLAN_PRICES[data.plan_type],
         stripe_subscription_id=stripe_sub.id,
@@ -327,16 +323,12 @@ async def _create_stripe_subscription(
             boleto_due_date=boleto_data.get("expires_at"),
         )
     else:
-        # Para trial com cartão, Stripe cria um pending_setup_intent para coletar
-        # o método de pagamento que será cobrado ao fim do trial.
-        pending_si = stripe_sub.get("pending_setup_intent") or {}
-        setup_client_secret = (
-            pending_si.get("client_secret") if isinstance(pending_si, dict) else None
-        )
+        # Cartão — cobrado imediatamente via payment_intent da invoice
+        payment_client_secret = payment_intent.get("client_secret")
         return CheckoutSessionResponse(
             subscription_id=str(sub.id),
             payment_method="credit_card",
-            setup_client_secret=setup_client_secret,
+            setup_client_secret=payment_client_secret,
             card_success=payment_intent.get("status") == "succeeded",
         )
 

@@ -88,7 +88,7 @@ export function PlanSelectModal({ onSelect, onClose }: Props) {
           <div>
             <h2 className="text-lg font-bold">Escolha seu plano</h2>
             <p className="text-sm text-muted-foreground">
-              7 dias grátis em todos · cancele quando quiser
+              Cobrado imediatamente · cancele quando quiser
             </p>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
@@ -158,13 +158,13 @@ export function PlanSelectModal({ onSelect, onClose }: Props) {
           className="w-full gradient-brand hover:opacity-90 font-semibold mt-5"
         >
           <Sparkles size={16} className="mr-2" />
-          Iniciar trial de 7 dias — {selectedPlan.label}
+          Assinar — {selectedPlan.label}
         </Button>
 
         <div className="flex items-center justify-center gap-1.5 mt-3">
           <Zap size={11} className="text-muted-foreground" />
           <p className="text-center text-xs text-muted-foreground">
-            7 dias grátis, cancele antes sem cobrança. Pagamento seguro via Stripe.
+            Cancele quando quiser. Pagamento seguro via Stripe.
           </p>
         </div>
       </motion.div>
