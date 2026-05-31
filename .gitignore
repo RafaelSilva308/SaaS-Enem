@@ -47,6 +47,9 @@ gerar_planilha.py
 # ─── Arquivos sensíveis / privados ───────────────────
 *.xlsx
 *.xls
+.env.production
+.env.staging
+Database_url.txt
 
 # ─── Provas ENEM (importação local, não vai pro git) ─
 Provas_2009-2025/
