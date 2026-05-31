@@ -1,7 +1,39 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-28 (UptimeRobot + Sentry configurados)
+> **Última atualização:** 2026-05-31 (performance + correção do fluxo de planos)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
+
+---
+
+## Sessão 2026-05-31 — Performance + Planos de Assinatura
+
+Tudo abaixo foi implementado, commitado, **pushed e deployado** (Vercel/Railway verificados).
+
+### Performance (código apenas)
+| Item | O que foi feito | Commit | Produção |
+|------|----------------|--------|----------|
+| Cache `/performance/*` | Cache Redis (TTL 30min) nos 6 endpoints, na camada de rota (padrão `dashboard.py`). Chaves `perf:{user_id}:*`, invalidadas em `submit_exam` via `scan_iter` | `a66a5a5` | ✅ Railway verificado (`redis: true`) |
+| N+1 admin de questões | `list_questions` carrega opções em 1 query `WHERE id IN (...)`; builder puro `_build_question_item` compartilhado | `bcd3116` | ✅ Railway |
+| recharts | 4 componentes eram código morto (páginas já usam SVG/HTML inline). Removidos + `npm uninstall recharts` | `e52fbce` | ✅ Vercel |
+| Promise.all dashboard | ⏸️ Não feito — chamadas já são paralelas; seria cosmético | — | — |
+| Índice `(subject, year)` | ⏸️ Não feito — ganho nulo com 1.558 linhas; exigiria migration manual | — | — |
+
+### Fluxo de planos de assinatura — bug corrigido
+Os planos pagos **mensal e semestral estavam inacessíveis** pela billing (checkout abria fixo em `premium_3m`). Além disso, os textos das features inventavam diferenciação de recursos entre planos (Mentoria 1x/2x, Suporte prioritário) — **não há diferença de funcionalidade, só de desconto** (o backend já serve `PLAN_FEATURES_ALL` para todos).
+
+| Mudança | Commit |
+|---------|--------|
+| `PlanSelectModal` — botão "Ver planos Premium" abre seleção dos 3 planos → checkout do escolhido | `8b34fd2` |
+| Textos dos planos padronizados (1m: funcionalidades completas · 3m: tudo do mensal + custo-benefício · 6m: tudo dos anteriores + promoção + melhor custo-benefício) nos 4 locais (modal, billing, onboarding, configurações) | `b46d184` |
+| Aba "Assinatura" em `/configuracoes` reescrita: busca `GET /subscriptions/me`, mostra só os 3 planos pagos, badge "Atual" e header refletindo o plano real (era tudo hardcoded/fake) | `caeb5b2` |
+| Onboarding **sem plano grátis** — só planos pagos, trial-first (7 dias grátis; backend cria a assinatura `trialing` no checkout). Removido o `activate-free` do fluxo | `fa83e1c` |
+
+**Decisão de produto registrada:** o cadastro deixou de ser freemium (grátis selecionável) e passou a ser **trial-only** — novo usuário escolhe um plano pago com 7 dias grátis. Planos grátis existentes no banco continuam válidos; o endpoint `/subscriptions/activate-free` permanece no backend mas não é mais chamado pelo frontend.
+
+### Segurança
+| Item | Commit |
+|------|--------|
+| `.env.production` e `Database_url.txt` (credenciais) agora no `.gitignore` — antes estavam untracked mas desprotegidos | `26a1b9a` |
 
 ---
 
