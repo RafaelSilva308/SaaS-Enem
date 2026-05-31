@@ -35,6 +35,29 @@ Os planos pagos **mensal e semestral estavam inacessíveis** pela billing (check
 |------|--------|
 | `.env.production` e `Database_url.txt` (credenciais) agora no `.gitignore` — antes estavam untracked mas desprotegidos | `26a1b9a` |
 
+### Pendências conhecidas (NÃO feitas — registro para retomar)
+
+**Bloqueadores de lançamento (continuam abertos):**
+- **Testes de fumaça (12 fluxos)** — nunca executados em produção: registro→OTP→login, onboarding, dashboard, criar/responder/ver simulado, redação (Gemini), os 3 checkouts (PIX/Boleto/Cartão), admin, PWA. São testes manuais.
+- **Analytics** — GA4/Plausible não instalado. Sem medição de visitas/conversão/churn para o lançamento.
+- **Lançamento** — e-mail para waitlist, posts em redes sociais e Product Hunt BR não feitos.
+
+**Performance (decisões conscientes):**
+- Item 3 (Promise.all dashboard) — descartado: as chamadas já são paralelas, seria cosmético.
+- Item 5 (índice `(subject, year)`) — adiado: ganho nulo com 1.558 linhas; exigiria migration manual no Railway.
+- Item 6 (Server Components) — futuro, dias de trabalho.
+
+**Configuração/credenciais:**
+- `OPENAI_API_KEY` — não configurada: fallback GPT-4o inativo (Gemini, o primário, funciona).
+- `STRIPE_WEBHOOK_SECRET` — verificar se segue ativo (foi configurado no Railway em 2026-05-28).
+- **Valores de assinatura no Stripe** — discutido em 2026-05-31, NÃO feito. Mudar preço exige: criar novos `Price` no Stripe (LIVE; Price é imutável), repontar `STRIPE_PRICE_ID_*` no Railway e atualizar os valores hardcoded no código.
+
+**Decisões adiadas:**
+- S1 — Toggle 2FA decorativo (endpoints existem, frontend não os chama). Adiado desde 2026-05-28.
+
+**Dívida técnica:**
+- Preços/features dos planos estão **hardcoded em 4 arquivos** (modal, billing, onboarding, configurações). Ideal futuro: fonte única consumindo `GET /subscriptions/plans`.
+
 ---
 
 ## Infraestrutura de Produção
