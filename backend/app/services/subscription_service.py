@@ -79,7 +79,7 @@ PLANS: list[PlanResponse] = [
     PlanResponse(
         id="premium_1m",
         name="1 mês",
-        price_brl=59.90,
+        price_brl=29.90,
         period_label="por mês",
         highlight=False,
         trial_days=7,
@@ -88,9 +88,9 @@ PLANS: list[PlanResponse] = [
     PlanResponse(
         id="premium_3m",
         name="3 meses",
-        price_brl=99.90,
+        price_brl=79.90,
         period_label="por trimestre",
-        highlight=True,  # "Mais popular"
+        highlight=False,
         trial_days=7,
         features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
@@ -99,7 +99,7 @@ PLANS: list[PlanResponse] = [
         name="6 meses",
         price_brl=149.90,
         period_label="por semestre",
-        highlight=False,
+        highlight=True,  # "Melhor opção" — cobre todo o período até o ENEM
         trial_days=7,
         features=[PlanFeatures(label=f, included=True) for f in PLAN_FEATURES_ALL],
     ),
@@ -120,8 +120,8 @@ PLAN_DURATIONS_DAYS = {
 
 PLAN_PRICES = {
     "free": 0.0,
-    "premium_1m": 59.90,
-    "premium_3m": 99.90,
+    "premium_1m": 29.90,
+    "premium_3m": 79.90,
     "premium_6m": 149.90,
 }
 

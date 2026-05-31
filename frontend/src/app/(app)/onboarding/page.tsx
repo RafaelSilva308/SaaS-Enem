@@ -361,26 +361,31 @@ function StepResults({ result, onNext }: { result: DiagnosticResult; onNext: () 
 // ── Step 5: Plan Selection ───────────────────────────────────────
 interface PlanData {
   id: string; label: string; price: number; period: string
-  features: string[]; highlight: boolean
+  perMonth: number; discount: number | null
+  features: string[]; highlight: boolean; badge: string | null
 }
 const PLANS_DATA: PlanData[] = [
-  { id: "premium_1m",  label: "1 mês",    price: 59.90,  period: "/mês",         highlight: false,
-    features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"] },
-  { id: "premium_3m",  label: "3 meses",  price: 99.90,  period: "/trimestre",   highlight: true,
-    features: ["Tudo do plano mensal", "Ótimo custo-benefício"] },
-  { id: "premium_6m",  label: "6 meses",  price: 149.90, period: "/semestre",    highlight: false,
-    features: ["Tudo dos planos anteriores", "Promoção especial", "Melhor custo-benefício"] },
+  {
+    id: "premium_1m", label: "1 mês", price: 29.90, period: "/mês",
+    perMonth: 29.90, discount: null, highlight: false, badge: null,
+    features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"],
+  },
+  {
+    id: "premium_3m", label: "3 meses", price: 79.90, period: "/trimestre",
+    perMonth: 26.63, discount: 11, highlight: false, badge: null,
+    features: ["Tudo do plano mensal", "Economia de R$ 9,80 vs. mensal"],
+  },
+  {
+    id: "premium_6m", label: "6 meses", price: 149.90, period: "/semestre",
+    perMonth: 24.98, discount: 17, highlight: true, badge: "Cobre o ENEM inteiro",
+    features: ["Tudo dos planos anteriores", "Melhor custo-benefício", "Economia de R$ 29,50 vs. mensal"],
+  },
 ]
 
 function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolean }) {
-  const [selected, setSelected] = useState("premium_3m")
+  const [selected, setSelected] = useState("premium_6m")
   const [showCheckout, setShowCheckout] = useState(false)
   const selectedPlan = PLANS_DATA.find(p => p.id === selected)!
-
-  function handleContinue() {
-    // Apenas planos pagos — todos com trial de 7 dias grátis, cobrança só após o trial
-    setShowCheckout(true)
-  }
 
   return (
     <>
@@ -390,24 +395,38 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
           <p className="text-muted-foreground text-sm">Comece com 7 dias grátis · cancele quando quiser</p>
         </div>
 
+        {/* Urgency banner */}
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25">
+          <span className="text-amber-400 text-xs">⏰</span>
+          <p className="text-xs text-amber-300 font-medium">Preço de lançamento · válido por tempo limitado</p>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {PLANS_DATA.map(plan => (
             <button key={plan.id} onClick={() => setSelected(plan.id)}
               className={cn(
                 "relative text-left p-4 rounded-xl border transition-all",
                 selected === plan.id ? "border-primary bg-primary/10" : "border-white/10 bg-white/5 hover:border-white/20",
-                plan.highlight && "ring-1 ring-secondary/40"
+                plan.highlight && selected !== plan.id && "ring-1 ring-secondary/40"
               )}>
-              {plan.highlight && (
+              {plan.badge && (
                 <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
-                  Mais popular
+                  {plan.badge}
                 </span>
               )}
-              <p className="font-bold text-sm">{plan.label}</p>
-              <p className="text-lg font-bold text-gradient-brand">
-                {plan.price === 0 ? "Grátis" : `R$ ${plan.price.toFixed(2).replace(".", ",")}`}
+              <p className="font-bold text-sm mb-0.5">{plan.label}</p>
+              {plan.discount && (
+                <span className="inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/25 mb-1">
+                  −{plan.discount}%
+                </span>
+              )}
+              <p className="text-lg font-bold text-gradient-brand leading-none">
+                R$ {plan.price.toFixed(2).replace(".", ",")}
               </p>
-              <p className="text-[10px] text-muted-foreground mb-2">{plan.period}</p>
+              <p className="text-[10px] text-muted-foreground">{plan.period}</p>
+              <p className="text-[11px] font-semibold text-primary/80 mt-1 mb-2">
+                R$ {plan.perMonth.toFixed(2).replace(".", ",")}/mês
+              </p>
               <ul className="space-y-0.5">
                 {plan.features.map(f => (
                   <li key={f} className="text-[10px] text-muted-foreground flex items-start gap-1">
@@ -419,12 +438,12 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
           ))}
         </div>
 
-        <Button onClick={handleContinue} disabled={loading} className="w-full gradient-brand hover:opacity-90 font-semibold">
+        <Button onClick={() => setShowCheckout(true)} disabled={loading} className="w-full gradient-brand hover:opacity-90 font-semibold">
           {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Sparkles size={16} className="mr-2" />}
-          {loading ? "Aguarde…" : "Iniciar trial de 7 dias"}
+          {loading ? "Aguarde…" : `Iniciar trial de 7 dias — ${selectedPlan.label}`}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          7 dias grátis, cancele antes sem custo. Pagamento seguro via Stripe.
+          7 dias grátis, cancele antes sem cobrança. Pagamento seguro via Stripe.
         </p>
       </motion.div>
 
