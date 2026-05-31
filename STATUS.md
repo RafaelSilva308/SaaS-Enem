@@ -488,12 +488,12 @@ Extrair validação de senha para função compartilhada e aplicar em `RegisterR
 | `REDIS_URL` | ✅ Configurado (Railway) |
 | `SECRET_KEY` | ✅ Configurado |
 | `STRIPE_SECRET_KEY` | ✅ Configurado (LIVE) |
-| `STRIPE_WEBHOOK_SECRET` | ❌ Pendente — webhooks Stripe não funcionam |
+| `STRIPE_WEBHOOK_SECRET` | ✅ Configurado (Railway) — webhook `we_1Tc8OYGlckaqYJAXhqz5hsag` |
 | `STRIPE_PRICE_ID_1M/3M/6M` | ✅ Configurado |
 | `RESEND_API_KEY` | ✅ Configurado |
 | `GOOGLE_API_KEY` | ✅ Configurado (Gemini — correção de redação funciona) |
 | `OPENAI_API_KEY` | ❌ Pendente — fallback GPT-4o inativo (Gemini é o primário) |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ⚠️ Verificar se está configurado no Vercel |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ✅ Configurado (Vercel) — confirmado no build `671b704` sem erros |
 | `VAPID_PUBLIC_KEY` | ✅ Configurado |
 | `VAPID_PRIVATE_KEY` | ✅ Configurado |
 | `APP_ENV` | ✅ `production` (docs FastAPI desativados) |
