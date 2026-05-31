@@ -364,8 +364,6 @@ interface PlanData {
   features: string[]; highlight: boolean
 }
 const PLANS_DATA: PlanData[] = [
-  { id: "free",        label: "Grátis",   price: 0,      period: "para sempre",  highlight: false,
-    features: ["Diagnóstico", "Plano 4 semanas", "20 questões/dia", "1 simulado/mês"] },
   { id: "premium_1m",  label: "1 mês",    price: 59.90,  period: "/mês",         highlight: false,
     features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"] },
   { id: "premium_3m",  label: "3 meses",  price: 99.90,  period: "/trimestre",   highlight: true,
@@ -379,16 +377,9 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
   const [showCheckout, setShowCheckout] = useState(false)
   const selectedPlan = PLANS_DATA.find(p => p.id === selected)!
 
-  async function handleContinue() {
-    if (selected === "free") {
-      // Ativar freemium diretamente — sem checkout
-      try {
-        await api.post("/subscriptions/activate-free")
-      } catch { /* ignora se já existe */ }
-      onFinish()
-    } else {
-      setShowCheckout(true)
-    }
+  function handleContinue() {
+    // Apenas planos pagos — todos com trial de 7 dias grátis, cobrança só após o trial
+    setShowCheckout(true)
   }
 
   return (
@@ -396,10 +387,10 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
       <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-1">Escolha seu plano</h2>
-          <p className="text-muted-foreground text-sm">Cancele quando quiser · 7 dias grátis nos planos pagos</p>
+          <p className="text-muted-foreground text-sm">Comece com 7 dias grátis · cancele quando quiser</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {PLANS_DATA.map(plan => (
             <button key={plan.id} onClick={() => setSelected(plan.id)}
               className={cn(
@@ -430,11 +421,10 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
 
         <Button onClick={handleContinue} disabled={loading} className="w-full gradient-brand hover:opacity-90 font-semibold">
           {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Sparkles size={16} className="mr-2" />}
-          {loading ? "Aguarde…" : selected === "free" ? "Continuar grátis" : "Iniciar trial de 7 dias"}
+          {loading ? "Aguarde…" : "Iniciar trial de 7 dias"}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          {selected !== "free" && "7 dias grátis, cancele antes sem custo. "}
-          Pagamento seguro via Stripe.
+          7 dias grátis, cancele antes sem custo. Pagamento seguro via Stripe.
         </p>
       </motion.div>
 
