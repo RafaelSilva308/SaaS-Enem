@@ -1,7 +1,72 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-31 (testes de fumaça pendentes — banco limpo, pronto para testar)
+> **Última atualização:** 2026-05-31 (4ª sessão — landing page, onboarding copy, UX)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
+
+---
+
+## Sessão 2026-05-31 (4ª) — Landing Page + Onboarding Copy + UX
+
+Tudo abaixo foi implementado, commitado e **deployado** (Vercel ✅ verificado via MCP).
+
+### O que foi feito
+
+| Item | Commit | Status |
+|------|--------|--------|
+| Data de nascimento no cadastro — substituído `<input type="date">` por 3 selects (Dia/Mês/Ano), range 1940–2010, compõe `YYYY-MM-DD` internamente | `9632afc` | ✅ Vercel |
+| Onboarding copy reescrito para conversão em todas as 5 etapas | `2a3f8ee` | ✅ Vercel |
+| Landing page completa em `/` — substituído placeholder de 3 linhas | `109d318` | ✅ Vercel |
+| Link "Entrar" adicionado à navbar da landing page | `30c8a44` | ✅ Vercel |
+
+### Detalhes — Onboarding copy (`2a3f8ee`)
+
+| Etapa | O que mudou |
+|-------|-------------|
+| 1 — Boas-vindas | Headline: *"Você está a 2 minutos de saber exatamente o que estudar"*; subtext espelho da dor; CTA *"Quero meu diagnóstico →"* |
+| 2 — Perfil | Headline honesto *"rotina real, não perfeita"*; labels de estilo melhorados; CTA *"Analisar meu perfil →"* |
+| 3 — Autoavaliação | Honesty hook; botões com emoji + descrição de resultado (*"Evito essa área — me trava na prova"*); prova social *"92% identificam área crítica"* |
+| 4 — Resultado | Headline personalizado com primeiro nome; countdown dinâmico de semanas até o ENEM; bloco de urgência *"87 pontos em 90 dias"* |
+| 5 — Plano | Badge *"Mais popular"* no 3m, *"Recomendado para você"* no 6m; âncora de valor (cursinho vs. ENEM Pro); reversão de risco |
+
+### Detalhes — Landing page (`109d318`)
+
+Arquivo: `frontend/src/app/page.tsx` + `frontend/src/app/landing.module.css`
+
+Seções: Hero com countdown ao vivo · Stats · 8 feature cards · Como funciona (5 passos) · Pricing (3 planos pagos) · CTA final · Footer
+
+Conteúdo atualizado vs. versão antiga (`docs/index.html` de 2026-05-25):
+- Sem "em desenvolvimento", "em breve" ou trial de 7 dias
+- Preços corretos (R$ 29,90 / R$ 79,90 / R$ 149,90)
+- Funcionalidades reais (removidos Saúde Mental e Comunidade que não existem; adicionados PWA e Contingência)
+- Stats corretos: 1.558+ questões · 4 áreas · IA · TRI · PWA
+- CTAs diretos para `/register` e `/login`
+- GitHub removido do footer; links para `/termos` e `/privacidade`
+- Arquivo original recuperado do git em `docs_landing_recuperada.html`
+
+### ⏳ Próximo passo imediato — Testes de fumaça
+
+Banco limpo e pronto. Executar **manualmente** em [enemproapp.com.br](https://enemproapp.com.br) em aba anônima:
+
+**Bloco 1 — Acesso (5 min)**
+- [ ] Registro → recebe OTP no e-mail → verifica conta
+- [ ] Login com usuário recém-criado
+- [ ] Onboarding completo (autoavaliação → escolha de plano)
+
+**Bloco 2 — Funcionalidades principais (15 min)**
+- [ ] Dashboard carrega (countdown, meta do dia, recomendação)
+- [ ] Criar e responder simulado → ver resultado
+- [ ] Escrever redação → enviar → ver nota do Gemini
+
+**Bloco 3 — Pagamento (10 min)**
+- [ ] Checkout PIX — gerar QR code (não precisa pagar, só verificar se aparece)
+- [ ] Checkout Boleto — gerar boleto (só verificar se gera)
+- [ ] Checkout Cartão — verificar se o campo do cartão aparece
+
+**Bloco 4 — Admin e PWA (5 min)**
+- [ ] Entrar em `/admin` com conta admin (ir ao Neon Console e rodar `UPDATE users SET role='admin' WHERE email='...'`)
+- [ ] No celular: acessar o site e ver se aparece opção de instalar como app
+
+**Após os testes:** lançamento (e-mail waitlist · redes sociais · Product Hunt BR)
 
 ---
 
