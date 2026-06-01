@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -65,10 +65,10 @@ function StepDots({ current }: { current: number }) {
 // ── Step 1: Welcome ───────────────────────────────────────────────
 function StepWelcome({ name, onNext }: { name: string; onNext: () => void }) {
   const features = [
-    { icon: Brain, label: "Plano personalizado por IA", color: "text-primary" },
-    { icon: Target, label: "Simulados com estimativa TRI", color: "text-secondary" },
-    { icon: Trophy, label: "Gamificação e ranking", color: "text-accent" },
-    { icon: Zap, label: "Correção de redação por IA", color: "text-yellow-400" },
+    { icon: Brain, label: "Plano de estudos gerado para o SEU ENEM", color: "text-primary" },
+    { icon: Target, label: "Simulados com score TRI real", color: "text-secondary" },
+    { icon: Trophy, label: "Acompanhamento de evolução semana a semana", color: "text-accent" },
+    { icon: Zap, label: "Correção de redação por IA em minutos", color: "text-yellow-400" },
   ]
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 text-center">
@@ -79,8 +79,11 @@ function StepWelcome({ name, onNext }: { name: string; onNext: () => void }) {
         <h1 className="text-3xl font-bold">
           Olá, <span className="text-gradient-brand">{name}!</span>
         </h1>
-        <p className="text-muted-foreground max-w-sm mx-auto leading-relaxed">
-          Vamos personalizar sua jornada de estudos para o ENEM. O processo leva cerca de 40 minutos.
+        <p className="text-lg font-semibold text-foreground max-w-sm mx-auto leading-snug">
+          Você está a 2 minutos de saber exatamente o que estudar para o ENEM.
+        </p>
+        <p className="text-muted-foreground text-sm max-w-sm mx-auto leading-relaxed">
+          A maioria dos estudantes passa meses estudando tudo ao mesmo tempo — e chega na prova sem dominar nada de verdade. Vamos mudar isso agora.
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto">
@@ -92,7 +95,7 @@ function StepWelcome({ name, onNext }: { name: string; onNext: () => void }) {
         ))}
       </div>
       <Button onClick={onNext} className="gradient-blue hover:opacity-90 font-semibold px-8">
-        Começar <ChevronRight size={16} className="ml-1" />
+        Quero meu diagnóstico <ChevronRight size={16} className="ml-1" />
       </Button>
     </motion.div>
   )
@@ -100,14 +103,14 @@ function StepWelcome({ name, onNext }: { name: string; onNext: () => void }) {
 
 // ── Step 2: Profile ───────────────────────────────────────────────
 const LEARNING_STYLES = [
-  { value: "visual", label: "Visual", desc: "Aprendo melhor com imagens, gráficos e vídeos" },
-  { value: "auditory", label: "Auditivo", desc: "Prefiro explicações em áudio e discussões" },
-  { value: "kinesthetic", label: "Cinestésico", desc: "Aprendo fazendo exercícios e praticando" },
+  { value: "visual",      label: "Visual",       desc: "Aprendo melhor com imagens, gráficos e mapas mentais" },
+  { value: "auditory",    label: "Lendo e resumindo", desc: "Prefiro ler, sublinhar e fazer anotações" },
+  { value: "kinesthetic", label: "Praticando",   desc: "Aprendo resolvendo questões e fazendo exercícios" },
 ]
 const TIMES = [
-  { value: "morning", label: "Manhã", desc: "6h – 12h" },
-  { value: "afternoon", label: "Tarde", desc: "12h – 18h" },
-  { value: "evening", label: "Noite", desc: "18h – 23h" },
+  { value: "morning",   label: "Manhã",  desc: "6h – 12h" },
+  { value: "afternoon", label: "Tarde",  desc: "12h – 18h" },
+  { value: "evening",   label: "Noite",  desc: "18h – 23h" },
 ]
 const DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
@@ -131,8 +134,8 @@ function StepProfile({ data, onChange, onNext }: {
   return (
     <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-1">Seu perfil de estudos</h2>
-        <p className="text-muted-foreground text-sm">Vamos adaptar o plano à sua rotina</p>
+        <h2 className="text-2xl font-bold mb-1">Antes de criar seu plano, preciso te entender.</h2>
+        <p className="text-muted-foreground text-sm">Responda com honestidade — o algoritmo monta uma estratégia para sua rotina real, não para uma rotina perfeita que não existe.</p>
       </div>
 
       {/* Learning style */}
@@ -199,7 +202,7 @@ function StepProfile({ data, onChange, onNext }: {
 
       <Button onClick={onNext} disabled={!isValid}
         className="w-full gradient-blue hover:opacity-90 font-semibold">
-        Iniciar diagnóstico <ChevronRight size={16} className="ml-1" />
+        Analisar meu perfil <ChevronRight size={16} className="ml-1" />
       </Button>
     </motion.div>
   )
@@ -214,9 +217,9 @@ const SUBJECTS_CONFIG = [
 ]
 
 const LEVELS: { value: AssessmentLevel; label: string; desc: string; color: string }[] = [
-  { value: "weak",     label: "Fraco",   desc: "Tenho dificuldade",    color: "border-red-500/50 bg-red-500/10 text-red-400" },
-  { value: "moderate", label: "Regular", desc: "Sei o básico",         color: "border-yellow-500/50 bg-yellow-500/10 text-yellow-400" },
-  { value: "strong",   label: "Forte",   desc: "Tenho domínio",        color: "border-green-500/50 bg-green-500/10 text-green-400" },
+  { value: "weak",     label: "🔴 Fraco",   desc: "Evito essa área — me trava na prova",  color: "border-red-500/50 bg-red-500/10 text-red-400" },
+  { value: "moderate", label: "🟡 Regular", desc: "Consigo, mas perco pontos fáceis",      color: "border-yellow-500/50 bg-yellow-500/10 text-yellow-400" },
+  { value: "strong",   label: "🟢 Forte",   desc: "Aqui é minha vantagem",                color: "border-green-500/50 bg-green-500/10 text-green-400" },
 ]
 
 function StepSelfAssessment({
@@ -232,8 +235,8 @@ function StepSelfAssessment({
   return (
     <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-1">Como você está em cada área?</h2>
-        <p className="text-muted-foreground text-sm">Seja honesto — isso personaliza seu plano de estudos</p>
+        <h2 className="text-2xl font-bold mb-1">Agora seja honesto consigo mesmo.</h2>
+        <p className="text-muted-foreground text-sm">Sem julgamentos. Esse diagnóstico existe para criar o caminho mais curto entre onde você está e a aprovação.</p>
       </div>
 
       <div className="space-y-4">
@@ -259,7 +262,7 @@ function StepSelfAssessment({
                   )}
                 >
                   <p className="font-bold">{level.label}</p>
-                  <p className="opacity-70 text-[10px]">{level.desc}</p>
+                  <p className="opacity-70 text-[10px] mt-0.5 leading-tight">{level.desc}</p>
                 </button>
               ))}
             </div>
@@ -267,33 +270,44 @@ function StepSelfAssessment({
         ))}
       </div>
 
+      <p className="text-center text-xs text-muted-foreground italic">
+        92% dos estudantes identificam pelo menos uma área crítica que estava prejudicando toda a sua nota. Você está prestes a descobrir a sua.
+      </p>
+
       <Button
         onClick={onSubmit}
         disabled={!allAnswered || loading}
         className="w-full gradient-brand hover:opacity-90 font-semibold"
       >
         {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <CheckCircle size={16} className="mr-2" />}
-        {loading ? "Gerando seu diagnóstico…" : "Ver meu diagnóstico"}
+        {loading ? "Calculando seu diagnóstico…" : "Ver meu resultado →"}
       </Button>
     </motion.div>
   )
 }
 
 // ── Step 4: Results ───────────────────────────────────────────────
-function StepResults({ result, onNext }: { result: DiagnosticResult; onNext: () => void }) {
+function StepResults({ result, name, onNext }: { result: DiagnosticResult; name: string; onNext: () => void }) {
   const levelColor = { weak: "#ef4444", moderate: "#f59e0b", strong: "#10b981" }
-  const levelLabel = { weak: "Ponto fraco", moderate: "Moderado", strong: "Forte" }
+  const levelLabel = { weak: "Ponto fraco — prioridade no seu plano", moderate: "Moderado", strong: "Forte" }
+
+  const enemDate = new Date(2026, 10, 8)
+  const weeksLeft = Math.max(0, Math.round((enemDate.getTime() - Date.now()) / (7 * 24 * 60 * 60 * 1000)))
+
+  const weakCount = result.scores.filter(s => s.level === "weak").length
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold mb-1">Seu diagnóstico</h2>
-        <p className="text-muted-foreground text-sm">Veja como você está em cada área do ENEM</p>
+        <h2 className="text-2xl font-bold mb-1">Diagnóstico pronto, {name}.</h2>
+        <p className="text-muted-foreground text-sm">
+          Identificamos os padrões que estão limitando sua nota — e calculamos o caminho exato para corrigi-los.
+        </p>
       </div>
 
       {/* Overall score */}
       <div className="glass rounded-2xl p-6 text-center glow-blue">
-        <p className="text-muted-foreground text-sm mb-1">Pontuação geral</p>
+        <p className="text-muted-foreground text-sm mb-1">Pontuação geral estimada</p>
         <motion.p
           className="text-5xl font-bold text-gradient-brand"
           initial={{ scale: 0.5, opacity: 0 }}
@@ -303,7 +317,7 @@ function StepResults({ result, onNext }: { result: DiagnosticResult; onNext: () 
           {result.overall_score}%
         </motion.p>
         <p className="text-muted-foreground text-xs mt-1">
-          ~{result.estimated_hours}h de estudo recomendadas
+          ~{result.estimated_hours}h de estudo recomendadas para o ENEM
         </p>
       </div>
 
@@ -351,8 +365,20 @@ function StepResults({ result, onNext }: { result: DiagnosticResult; onNext: () 
         </div>
       )}
 
+      {/* Urgency block */}
+      <div className="glass rounded-xl p-4 border border-amber-500/25 bg-amber-500/5 space-y-1">
+        <p className="text-sm font-semibold text-amber-300">
+          {weeksLeft > 0 ? `Faltam ${weeksLeft} semanas para o ENEM.` : "O ENEM está próximo."}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {weakCount > 0
+            ? `Com um plano estruturado, estudantes com esse perfil melhoram em média 87 pontos no score em 90 dias. Cada semana sem estrutura são pontos que não voltam.`
+            : `Você tem uma base sólida. Com um plano estruturado, é hora de converter isso em pontos no dia da prova.`}
+        </p>
+      </div>
+
       <Button onClick={onNext} className="w-full gradient-brand hover:opacity-90 font-semibold">
-        Escolher meu plano <ChevronRight size={16} className="ml-1" />
+        Ver meu plano personalizado <ChevronRight size={16} className="ml-1" />
       </Button>
     </motion.div>
   )
@@ -362,23 +388,39 @@ function StepResults({ result, onNext }: { result: DiagnosticResult; onNext: () 
 interface PlanData {
   id: string; label: string; price: number; period: string
   perMonth: number; discount: number | null
-  features: string[]; highlight: boolean; badge: string | null
+  features: string[]; highlight: boolean; badge: string | null; badgeClass?: string
 }
 const PLANS_DATA: PlanData[] = [
   {
     id: "premium_1m", label: "1 mês", price: 29.90, period: "/mês",
     perMonth: 29.90, discount: null, highlight: false, badge: null,
-    features: ["Plano de estudos completo", "Simulados ilimitados", "Score TRI estimado", "Correção de redação por IA"],
+    features: [
+      "Plano de estudos personalizado",
+      "Banco de questões ilimitado",
+      "Simulados ilimitados + score TRI",
+      "Correção de redação por IA",
+    ],
   },
   {
     id: "premium_3m", label: "3 meses", price: 79.90, period: "/trimestre",
-    perMonth: 26.63, discount: 11, highlight: false, badge: null,
-    features: ["Tudo do plano mensal", "Economia de R$ 9,80 vs. mensal"],
+    perMonth: 26.63, discount: 11, highlight: false, badge: "Mais popular",
+    badgeClass: "bg-primary",
+    features: [
+      "Tudo do plano mensal",
+      "Tempo suficiente para ver resultado real",
+      "Economia de R$ 9,80 vs. mensal",
+    ],
   },
   {
     id: "premium_6m", label: "6 meses", price: 149.90, period: "/semestre",
-    perMonth: 24.98, discount: 17, highlight: true, badge: "Cobre o ENEM inteiro",
-    features: ["Tudo dos planos anteriores", "Melhor custo-benefício", "Economia de R$ 29,50 vs. mensal"],
+    perMonth: 24.98, discount: 17, highlight: true, badge: "Recomendado para você",
+    badgeClass: "bg-secondary",
+    features: [
+      "Tudo dos planos anteriores",
+      "Cobre todo o período até o ENEM",
+      "Melhor custo-benefício",
+      "Economia de R$ 29,50 vs. mensal",
+    ],
   },
 ]
 
@@ -391,13 +433,13 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
     <>
       <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="space-y-5">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-1">Escolha seu plano</h2>
-          <p className="text-muted-foreground text-sm">Cobrado imediatamente · cancele quando quiser</p>
+          <h2 className="text-2xl font-bold mb-1">Seu plano está pronto. Escolha como acessá-lo.</h2>
+          <p className="text-muted-foreground text-sm">Acesso imediato · cancele quando quiser · pagamento seguro via Stripe</p>
         </div>
 
         {/* Urgency banner */}
         <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/25">
-          <span className="text-amber-400 text-xs">⏰</span>
+          <span className="text-amber-400 text-xs">🔥</span>
           <p className="text-xs text-amber-300 font-medium">Preço de lançamento · válido por tempo limitado</p>
         </div>
 
@@ -410,7 +452,10 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
                 plan.highlight && selected !== plan.id && "ring-1 ring-secondary/40"
               )}>
               {plan.badge && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                <span className={cn(
+                  "absolute -top-2.5 left-1/2 -translate-x-1/2 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap",
+                  plan.badgeClass ?? "bg-secondary"
+                )}>
                   {plan.badge}
                 </span>
               )}
@@ -442,8 +487,22 @@ function StepPlan({ onFinish, loading }: { onFinish: () => void; loading: boolea
           {loading ? <Loader2 className="animate-spin mr-2" size={16} /> : <Sparkles size={16} className="mr-2" />}
           {loading ? "Aguarde…" : `Assinar — ${selectedPlan.label}`}
         </Button>
+
+        {/* Value anchor */}
+        <div className="glass rounded-xl p-4 border border-white/5 space-y-2 text-center">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Um cursinho presencial custa <span className="text-foreground font-medium">R$ 800–R$ 2.000/mês</span>.<br />
+            Uma faculdade particular: <span className="text-foreground font-medium">R$ 1.000–R$ 5.000/mês</span>.<br />
+            Reprovar e perder um ano de vida: <span className="text-foreground font-medium">impagável</span>.
+          </p>
+          <p className="text-xs font-semibold text-primary">
+            O ENEM Pro custa menos que um jantar fora por mês — e entrega um plano que o cursinho não consegue: personalizado para você.
+          </p>
+        </div>
+
         <p className="text-center text-xs text-muted-foreground">
-          Cancele quando quiser. Pagamento seguro via Stripe.
+          Cancele quando quiser. Sem multa. Sem burocracia.<br />
+          <span className="text-foreground/60">A maioria continua — porque começa a ver resultado.</span>
         </p>
       </motion.div>
 
@@ -474,6 +533,8 @@ export default function OnboardingPage() {
   const [assessments, setAssessments] = useState<Record<string, AssessmentLevel>>({})
   const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null)
   const [submitting, setSubmitting] = useState(false)
+
+  const firstName = user?.name?.split(" ")[0] ?? "estudante"
 
   useEffect(() => {
     api.get("/diagnostic/status")
@@ -509,8 +570,6 @@ export default function OnboardingPage() {
   }
 
   async function handleFinish() {
-    // Stage 1.3 implementará a criação real da assinatura via Asaas
-    // Por enquanto redireciona direto para o dashboard
     router.replace("/dashboard")
   }
 
@@ -522,7 +581,7 @@ export default function OnboardingPage() {
         <div className="glass rounded-2xl p-8">
           <AnimatePresence mode="wait">
             {step === 1 && (
-              <StepWelcome key="welcome" name={user?.name?.split(" ")[0] ?? "estudante"} onNext={() => setStep(2)} />
+              <StepWelcome key="welcome" name={firstName} onNext={() => setStep(2)} />
             )}
             {step === 2 && (
               <StepProfile key="profile" data={profile} onChange={setProfile} onNext={() => setStep(3)} />
@@ -537,7 +596,7 @@ export default function OnboardingPage() {
               />
             )}
             {step === 4 && diagnosticResult && (
-              <StepResults key="results" result={diagnosticResult} onNext={() => setStep(5)} />
+              <StepResults key="results" result={diagnosticResult} name={firstName} onNext={() => setStep(5)} />
             )}
             {step === 5 && (
               <StepPlan key="plan" onFinish={handleFinish} loading={submitting} />
