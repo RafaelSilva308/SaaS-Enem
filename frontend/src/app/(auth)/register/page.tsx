@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -67,12 +67,28 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  const [dobDay, setDobDay] = useState("")
+  const [dobMonth, setDobMonth] = useState("")
+  const [dobYear, setDobYear] = useState("")
+
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) })
+
+  const handleDobChange = useCallback(
+    (day: string, month: string, year: string) => {
+      if (day && month && year) {
+        setValue("date_of_birth", `${year}-${month}-${day}`, { shouldValidate: true })
+      } else {
+        setValue("date_of_birth", "")
+      }
+    },
+    [setValue]
+  )
 
   const password = watch("password", "")
 
@@ -127,13 +143,52 @@ export default function RegisterPage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="date_of_birth">Data de nascimento</Label>
-          <Input
-            id="date_of_birth"
-            type="date"
-            className="bg-white/5 border-white/10 focus:border-primary"
-            {...register("date_of_birth")}
-          />
+          <Label>Data de nascimento</Label>
+          <input type="hidden" {...register("date_of_birth")} />
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              {
+                placeholder: "Dia",
+                value: dobDay,
+                onChange: (v: string) => { setDobDay(v); handleDobChange(v, dobMonth, dobYear) },
+                options: Array.from({ length: 31 }, (_, i) => {
+                  const d = String(i + 1).padStart(2, "0")
+                  return <option key={d} value={d}>{i + 1}</option>
+                }),
+              },
+              {
+                placeholder: "Mês",
+                value: dobMonth,
+                onChange: (v: string) => { setDobMonth(v); handleDobChange(dobDay, v, dobYear) },
+                options: [
+                  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+                  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+                ].map((m, i) => {
+                  const val = String(i + 1).padStart(2, "0")
+                  return <option key={val} value={val}>{m}</option>
+                }),
+              },
+              {
+                placeholder: "Ano",
+                value: dobYear,
+                onChange: (v: string) => { setDobYear(v); handleDobChange(dobDay, dobMonth, v) },
+                options: Array.from({ length: 71 }, (_, i) => {
+                  const y = String(2010 - i)
+                  return <option key={y} value={y}>{y}</option>
+                }),
+              },
+            ].map(({ placeholder, value, onChange, options }) => (
+              <select
+                key={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-0"
+              >
+                <option value="" disabled>{placeholder}</option>
+                {options}
+              </select>
+            ))}
+          </div>
           {errors.date_of_birth && (
             <p className="text-destructive text-xs">{errors.date_of_birth.message}</p>
           )}
