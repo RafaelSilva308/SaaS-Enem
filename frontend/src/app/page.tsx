@@ -22,7 +22,12 @@ export default function LandingPage() {
           <li><a href="#como-funciona">Como Funciona</a></li>
           <li><a href="#planos">Planos</a></li>
         </ul>
-        <Link href="/register" className={styles.navCta}>Criar conta</Link>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <Link href="/login" style={{ color: "var(--text-muted)", fontSize: "0.875rem", fontWeight: 500, textDecoration: "none" }}>
+            Entrar
+          </Link>
+          <Link href="/register" className={styles.navCta}>Criar conta</Link>
+        </div>
       </nav>
 
       {/* ── HERO ── */}
