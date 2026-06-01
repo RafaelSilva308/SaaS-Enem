@@ -1,7 +1,47 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-31 (remoção do trial + cobrança imediata)
+> **Última atualização:** 2026-05-31 (testes de fumaça pendentes — banco limpo, pronto para testar)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
+
+---
+
+## Sessão 2026-05-31 (3ª) — Verificações, Analytics e Preparação para Testes
+
+### O que foi feito
+
+| Item | Status | Detalhe |
+|------|--------|---------|
+| Credenciais Vercel verificadas | ✅ | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` confirmada no build `671b704` — sem erros |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | Já estava configurado desde 2026-05-28 — STATUS.md estava desatualizado |
+| Vercel Analytics instalado | ✅ | `@vercel/analytics` adicionado ao `layout.tsx` · commit `ca600da` · Vercel ✅ |
+| `GOOGLE_API_KEY` atualizada | ✅ | Nova chave criada no AI Studio hoje, configurada no Railway e redeploy disparado |
+| Chave Gemini antiga revogada | ✅ | Chave que apareceu no chat foi revogada no AI Studio |
+| Banco de produção limpo | ✅ | `TRUNCATE users CASCADE` executado no Neon Console — todos os usuários e dados relacionados apagados para testes de fumaça |
+
+### ⏳ Próximo passo imediato — Testes de fumaça
+
+Banco limpo e pronto. Executar **manualmente** em [enemproapp.com.br](https://enemproapp.com.br) em aba anônima:
+
+**Bloco 1 — Acesso (5 min)**
+- [ ] Registro → recebe OTP no e-mail → verifica conta
+- [ ] Login com usuário recém-criado
+- [ ] Onboarding completo (autoavaliação → escolha de plano)
+
+**Bloco 2 — Funcionalidades principais (15 min)**
+- [ ] Dashboard carrega (countdown, meta do dia, recomendação)
+- [ ] Criar e responder simulado → ver resultado
+- [ ] Escrever redação → enviar → ver nota do Gemini
+
+**Bloco 3 — Pagamento (10 min)**
+- [ ] Checkout PIX — gerar QR code (não precisa pagar, só verificar se aparece)
+- [ ] Checkout Boleto — gerar boleto (só verificar se gera)
+- [ ] Checkout Cartão — verificar se o campo do cartão aparece
+
+**Bloco 4 — Admin e PWA (5 min)**
+- [ ] Entrar em `/admin` com conta admin (verificar se role=admin está no banco após cadastro)
+- [ ] No celular: acessar o site e ver se aparece opção de instalar como app
+
+**Após os testes:** lançamento (e-mail waitlist · redes sociais · Product Hunt BR)
 
 ---
 
