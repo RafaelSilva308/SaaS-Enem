@@ -724,8 +724,13 @@ textarea.input { height: auto; min-height: 120px; padding: 12px 14px; line-heigh
   .page-header .row { flex-wrap: wrap; gap: 8px; }
 
   /* Answer rows on mobile */
-  .answer-row { padding: 12px 14px; font-size: 13px; }
+  .answer-row { padding: 12px 14px; font-size: 13px; min-height: 52px; }
   .answer-row .letter { height: 28px; width: 28px; border-radius: 8px; font-size: 12px; }
+
+  /* Touch targets — minimum 44×44 px on mobile */
+  .btn-icon { height: 44px; width: 44px; }
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 36px; }
 }
 
 @media (max-width: 480px) {
@@ -781,8 +786,13 @@ textarea.input { height: auto; min-height: 120px; padding: 12px 14px; line-heigh
 @keyframes drift {
   0%, 100% { transform: translate(0, 0); } 33% { transform: translate(30px, -20px); } 66% { transform: translate(-20px, 30px); }
 }
+@keyframes sheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
 
 .anim-slide-up  { animation: slideUp 350ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.anim-sheet-up  { animation: sheetUp 320ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
 .anim-fade      { animation: fadeIn 350ms ease-out forwards; }
 .anim-scale     { animation: scaleIn 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .anim-pulse-glow{ animation: pulseGlow 2.4s ease-in-out infinite; }

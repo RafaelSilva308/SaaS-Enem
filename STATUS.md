@@ -1,7 +1,53 @@
 # SaaS ENEM — Status do Projeto
 
-> **Última atualização:** 2026-05-31 (4ª sessão — landing page, onboarding copy, UX)
+> **Última atualização:** 2026-06-04 (5ª sessão — estabilidade, segurança e UX mobile)
 > **Fonte de verdade:** este arquivo. Atualizar manualmente a cada sessão de trabalho.
+
+---
+
+## Sessão 2026-06-04 (5ª) — Estabilidade de Produção + UX Mobile
+
+### Parte 1 — Estabilidade e Correções de Produção
+
+Tudo abaixo foi implementado, commitado e **deployado** (Vercel ✅ + Railway ✅).
+
+| Item | Detalhe | Status |
+|------|---------|--------|
+| CORS corrigido | `FRONTEND_URL=https://enemproapp.com.br` + `EXTRA_CORS_ORIGINS` com URLs Vercel de backup — atualizado no Railway via GraphQL API | ✅ Railway |
+| `EMAIL_FROM` corrigido | Alterado para `noreply@enemproapp.com.br` (domínio verificado no Resend) | ✅ Railway |
+| `STRIPE_WEBHOOK_SECRET` renovado | Webhook antigo deletado e recriado no Stripe para obter novo signing secret — configurado no Railway | ✅ Railway |
+| Speed Insights | `@vercel/speed-insights` adicionado ao `layout.tsx` (já existia no `package.json`) | ✅ Vercel |
+| Script `fix-prod-env.ps1` | Script PowerShell criado em `scripts/` — automatiza atualização de CORS, EMAIL_FROM e webhook Stripe no Railway + redeploy | ✅ Local |
+
+### Parte 2 — UX Mobile (redação e simulado)
+
+Tudo abaixo foi implementado, commitado e **deployado** (Vercel ✅).
+
+#### Touch targets (`globals.css`)
+- `.btn-icon` → `44×44px` em mobile (era menor)
+- `.btn` → `min-height: 44px` em mobile
+- `.btn-sm` → `min-height: 36px` em mobile
+- `.answer-row` → `min-height: 52px` em mobile
+- `@keyframes sheetUp` + `.anim-sheet-up` — animação de bottom sheet (320ms ease-out)
+
+#### Redação — `escrever/page.tsx`
+- Detecção de mobile via `window.matchMedia("(max-width: 768px)")` com listener de mudança
+- **Mobile tab bar**: abas "Tema" / "Escrever" com ícones — evita rolagem para ver o tema
+- **Topbar compacto** no mobile: botão voltar + título truncado + botão "Enviar"
+- Stats (Linhas/Palavras) e Timer movidos para dentro do painel editor (visíveis sem rolar)
+- Layout desktop preservado (grid-editor split vertical)
+- **Bugfix**: `router.push('/app/redacao/${essayId}')` → `/redacao/${essayId}` (rota `/app/` não existe)
+
+#### Simulado — `fazer/page.tsx`
+- Detecção de mobile via `matchMedia` (mesmo padrão)
+- **Mobile topbar compacto**: X + "Q {n}/{total}" centralizado + timer numérico + bookmark
+- **Desktop topbar preservado**: barra de progresso, "Navegador", "Finalizar simulado"
+- **Swipe para navegar**: `touchstart`/`touchend` com threshold 60px e verificação de direção (não conflita com scroll vertical)
+- **Barra de ação inferior** (mobile): Ant ← | {n}/{total} | → Próx | ícone navegador | Finalizar
+- Botões Anterior/Próxima e hint "Marcar para revisão" ocultados no mobile (na barra inferior)
+- **Navegador**: desktop = drawer lateral direito (420px); mobile = bottom sheet (`borderRadius: 20px 20px 0 0`, `maxHeight: 70vh`) com `anim-sheet-up`
+- Bookmark movido para topbar no mobile (oculto da área de badges da questão)
+- **Bugfix**: `router.push('/app/simulados/${id}/resultado')` → `/simulados/${id}/resultado` (2 ocorrências: `handleExpire` e `handleSubmit`)
 
 ---
 

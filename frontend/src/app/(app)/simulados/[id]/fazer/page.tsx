@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { use, useCallback, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -56,7 +56,17 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
   const [submitting, setSubmitting] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)")
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [])
 
   useEffect(() => {
     startExam()
@@ -81,7 +91,7 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
   const handleExpire = useCallback(() => {
     toast.warning("Tempo esgotado! Enviando automaticamente…")
     api.post(`/exams/scheduled/${id}/submit`)
-      .then(() => { localStorage.removeItem(STORAGE_KEY(id)); router.push(`/app/simulados/${id}/resultado`) })
+      .then(() => { localStorage.removeItem(STORAGE_KEY(id)); router.push(`/simulados/${id}/resultado`) })
       .catch(() => {})
   }, [id, router])
 
@@ -113,12 +123,27 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
     try {
       await api.post(`/exams/scheduled/${id}/submit`)
       localStorage.removeItem(STORAGE_KEY(id))
-      router.push(`/app/simulados/${id}/resultado`)
+      router.push(`/simulados/${id}/resultado`)
     } catch (err: any) {
       toast.error(err?.response?.data?.detail ?? "Erro ao finalizar simulado")
       setSubmitting(false)
     }
   }
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+  }
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current || !state) return
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y
+    if (Math.abs(dx) >= 60 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0) setCurrentIndex(i => Math.min(state.questions.length - 1, i + 1))
+      else setCurrentIndex(i => Math.max(0, i - 1))
+    }
+    touchStartRef.current = null
+  }, [state])
 
   if (loading || !state) {
     return (
@@ -140,58 +165,103 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
   const diffLabel = DIFF_LABEL[currentQuestion.difficulty ?? "medium"] ?? "Média"
   const diffColor = currentQuestion.difficulty === "easy" ? "#6ee7b7" : currentQuestion.difficulty === "hard" ? "#fca5a5" : "#fcd34d"
 
+  const navGrid = (
+    <>
+      <div className="row" style={{ gap: 12, fontSize: 11.5, color: "var(--muted-foreground)", marginBottom: 16, flexWrap: "wrap" }}>
+        <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(16,185,129,0.25)", border: "1px solid rgba(16,185,129,0.5)" }} />Respondida</div>
+        <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(245,158,11,0.25)", border: "1px solid rgba(245,158,11,0.5)" }} />Marcada</div>
+        <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(30,41,59,0.7)", border: "1px solid var(--border-strong)" }} />Pendente</div>
+      </div>
+      <div className="grid-10q">
+        {questions.map((q, i) => {
+          const isAnswered = q.id in answers
+          const isMarked = marked.has(q.id)
+          const isCurrent = i === currentIndex
+          const bg = isCurrent ? "rgba(37,99,235,0.4)" : isAnswered ? "rgba(16,185,129,0.2)" : isMarked ? "rgba(245,158,11,0.2)" : "rgba(30,41,59,0.5)"
+          const brd = isCurrent ? "var(--primary)" : isAnswered ? "rgba(16,185,129,0.5)" : isMarked ? "rgba(245,158,11,0.5)" : "var(--border)"
+          return (
+            <button key={q.id} onClick={() => { setCurrentIndex(i); setNavOpen(false) }} className="mono"
+              style={{ aspectRatio: "1", borderRadius: 6, background: bg, border: `1px solid ${brd}`, color: "var(--foreground)", fontSize: 10.5, cursor: "pointer", fontFamily: "JetBrains Mono", fontWeight: 500 }}>
+              {i + 1}
+            </button>
+          )
+        })}
+      </div>
+    </>
+  )
+
   return (
     <div style={{ position: "fixed", inset: 0, background: "var(--background)", zIndex: 50, display: "flex", flexDirection: "column" }}>
       {/* Topbar */}
-      <div className="row between" style={{ padding: "14px 28px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)" }}>
-        <div className="row" style={{ gap: 14 }}>
-          <button className="btn btn-icon" onClick={() => router.push("/simulados")}><X size={15} /></button>
-          <div className="col" style={{ lineHeight: 1.2 }}>
-            <div style={{ fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>SIMULADO</div>
-            <div style={{ fontSize: 14, fontWeight: 600 }}>Questão {currentIndex + 1} de {questions.length}</div>
+      {isMobile ? (
+        <div className="row between" style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)", flexShrink: 0, gap: 8 }}>
+          <button className="btn btn-icon" style={{ flexShrink: 0 }} onClick={() => router.push("/simulados")}><X size={15} /></button>
+          <div style={{ flex: 1, textAlign: "center", fontSize: 14, fontWeight: 600 }}>
+            Q {currentIndex + 1}/{questions.length}
           </div>
-        </div>
-
-        <div className="col" style={{ flex: 1, maxWidth: 400, margin: "0 32px", gap: 4 }}>
-          <div className="row between" style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
-            <span>{answeredCount} respondidas</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div style={{ height: 4, background: "rgba(30,41,59,0.6)", borderRadius: 999, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg, #2563eb, #3b82f6)", borderRadius: 999, transition: "width 300ms" }} />
-          </div>
-        </div>
-
-        <div className="row" style={{ gap: 10 }}>
-          <div className="row" style={{ gap: 8, padding: "8px 14px", borderRadius: 12, background: timer.isCrit ? "rgba(239,68,68,0.12)" : timer.isWarn ? "rgba(245,158,11,0.12)" : "rgba(15,23,42,0.6)", border: `1px solid ${timer.isCrit ? "rgba(239,68,68,0.4)" : timer.isWarn ? "rgba(245,158,11,0.4)" : "var(--border)"}` }}>
-            <Clock size={15} color={timer.isCrit ? "#fca5a5" : timer.isWarn ? "#fcd34d" : "currentColor"} />
-            <span className="mono" style={{ fontSize: 16, fontWeight: 600, color: timer.isCrit ? "#fca5a5" : timer.isWarn ? "#fcd34d" : "var(--foreground)" }}>
+          <div className="row" style={{ gap: 6, flexShrink: 0 }}>
+            <span className="mono" style={{ fontSize: 13, fontWeight: 600, color: timer.isCrit ? "#fca5a5" : timer.isWarn ? "#fcd34d" : "var(--muted-foreground)" }}>
               {timer.display}
             </span>
+            <button className="btn btn-icon" onClick={handleToggleMark} aria-label="Marcar">
+              {currentMarked ? <BookmarkCheck size={15} color="#fcd34d" /> : <Bookmark size={15} />}
+            </button>
           </div>
-          <button className="btn btn-secondary" onClick={() => setNavOpen(true)}>
-            <Layers size={14} /> Navegador
-          </button>
-          <button className="btn btn-brand" onClick={() => setConfirmSubmit(true)}>Finalizar simulado</button>
         </div>
-      </div>
+      ) : (
+        <div className="row between" style={{ padding: "14px 28px", borderBottom: "1px solid var(--border)", background: "rgba(10, 18, 38, 0.85)", backdropFilter: "blur(20px)" }}>
+          <div className="row" style={{ gap: 14 }}>
+            <button className="btn btn-icon" onClick={() => router.push("/simulados")}><X size={15} /></button>
+            <div className="col" style={{ lineHeight: 1.2 }}>
+              <div style={{ fontSize: 11, color: "var(--muted-foreground)", letterSpacing: "0.05em" }}>SIMULADO</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>Questão {currentIndex + 1} de {questions.length}</div>
+            </div>
+          </div>
+
+          <div className="col" style={{ flex: 1, maxWidth: 400, margin: "0 32px", gap: 4 }}>
+            <div className="row between" style={{ fontSize: 11, color: "var(--muted-foreground)" }}>
+              <span>{answeredCount} respondidas</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <div style={{ height: 4, background: "rgba(30,41,59,0.6)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg, #2563eb, #3b82f6)", borderRadius: 999, transition: "width 300ms" }} />
+            </div>
+          </div>
+
+          <div className="row" style={{ gap: 10 }}>
+            <div className="row" style={{ gap: 8, padding: "8px 14px", borderRadius: 12, background: timer.isCrit ? "rgba(239,68,68,0.12)" : timer.isWarn ? "rgba(245,158,11,0.12)" : "rgba(15,23,42,0.6)", border: `1px solid ${timer.isCrit ? "rgba(239,68,68,0.4)" : timer.isWarn ? "rgba(245,158,11,0.4)" : "var(--border)"}` }}>
+              <Clock size={15} color={timer.isCrit ? "#fca5a5" : timer.isWarn ? "#fcd34d" : "currentColor"} />
+              <span className="mono" style={{ fontSize: 16, fontWeight: 600, color: timer.isCrit ? "#fca5a5" : timer.isWarn ? "#fcd34d" : "var(--foreground)" }}>
+                {timer.display}
+              </span>
+            </div>
+            <button className="btn btn-secondary" onClick={() => setNavOpen(true)}>
+              <Layers size={14} /> Navegador
+            </button>
+            <button className="btn btn-brand" onClick={() => setConfirmSubmit(true)}>Finalizar simulado</button>
+          </div>
+        </div>
+      )}
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "32px 0" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 32px" }}>
+      <div
+        style={{ flex: 1, overflowY: "auto", padding: isMobile ? "20px 0 80px" : "32px 0" }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "0 16px" : "0 32px" }}>
           <div className="row" style={{ gap: 10, marginBottom: 18 }}>
             <span className={`badge ${areaClass}`}>{currentQuestion.subject_label}</span>
             {currentQuestion.year && <span className="badge badge-default mono">ENEM {currentQuestion.year}</span>}
             <span style={{ fontSize: 11.5, fontWeight: 600, color: diffColor }}>{diffLabel}</span>
-            <button className="btn btn-icon" style={{ marginLeft: "auto" }} onClick={handleToggleMark} aria-label="Marcar">
-              {currentMarked
-                ? <BookmarkCheck size={15} color="#fcd34d" />
-                : <Bookmark size={15} />
-              }
-            </button>
+            {!isMobile && (
+              <button className="btn btn-icon" style={{ marginLeft: "auto" }} onClick={handleToggleMark} aria-label="Marcar">
+                {currentMarked ? <BookmarkCheck size={15} color="#fcd34d" /> : <Bookmark size={15} />}
+              </button>
+            )}
           </div>
 
-          <p style={{ fontSize: 16, lineHeight: 1.75, color: "#e2e8f0", marginBottom: 18 }}>
+          <p style={{ fontSize: isMobile ? 15 : 16, lineHeight: 1.75, color: "#e2e8f0", marginBottom: 18 }}>
             {currentQuestion.statement}
           </p>
 
@@ -202,7 +272,7 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
           )}
 
           <div className="col" style={{ gap: 10 }}>
-            {currentQuestion.options.map((opt, i) => {
+            {currentQuestion.options.map((opt) => {
               const isSelected = selectedAnswer === opt.letter
               return (
                 <button
@@ -217,50 +287,66 @@ export default function FazerSimuladoPage({ params }: { params: Promise<{ id: st
             })}
           </div>
 
-          <div className="row between" style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-            <button className="btn btn-secondary" onClick={() => setCurrentIndex(i => Math.max(0, i - 1))} disabled={currentIndex === 0}>
-              <ChevronLeft size={14} /> Anterior
-            </button>
-            <div className="row" style={{ gap: 8, fontSize: 12, color: "var(--muted-foreground)" }}>
-              <Bookmark size={12} /> Marcar para revisão <span className="kbd">M</span>
+          {!isMobile && (
+            <div className="row between" style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
+              <button className="btn btn-secondary" onClick={() => setCurrentIndex(i => Math.max(0, i - 1))} disabled={currentIndex === 0}>
+                <ChevronLeft size={14} /> Anterior
+              </button>
+              <div className="row" style={{ gap: 8, fontSize: 12, color: "var(--muted-foreground)" }}>
+                <Bookmark size={12} /> Marcar para revisão <span className="kbd">M</span>
+              </div>
+              <button className="btn btn-primary" onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))} disabled={currentIndex === questions.length - 1}>
+                Próxima <ChevronRight size={14} />
+              </button>
             </div>
-            <button className="btn btn-primary" onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))} disabled={currentIndex === questions.length - 1}>
-              Próxima <ChevronRight size={14} />
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Navigator drawer */}
+      {/* Mobile bottom action bar */}
+      {isMobile && (
+        <div className="row" style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "10px 12px", background: "rgba(8, 14, 30, 0.97)", borderTop: "1px solid var(--border)", backdropFilter: "blur(20px)", gap: 6, zIndex: 55 }}>
+          <button className="btn btn-secondary" style={{ flex: 1, minHeight: 44, fontSize: 13, gap: 4 }}
+            onClick={() => setCurrentIndex(i => Math.max(0, i - 1))} disabled={currentIndex === 0}>
+            <ChevronLeft size={14} /> Ant
+          </button>
+          <span className="mono" style={{ fontSize: 13, fontWeight: 600, padding: "0 6px", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+            {currentIndex + 1}/{questions.length}
+          </span>
+          <button className="btn btn-secondary" style={{ flex: 1, minHeight: 44, fontSize: 13, gap: 4 }}
+            onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))} disabled={currentIndex === questions.length - 1}>
+            Próx <ChevronRight size={14} />
+          </button>
+          <button className="btn btn-icon" style={{ minHeight: 44, width: 44 }} onClick={() => setNavOpen(true)}>
+            <Layers size={15} />
+          </button>
+          <button className="btn btn-brand" style={{ minHeight: 44, padding: "0 14px", fontSize: 13 }} onClick={() => setConfirmSubmit(true)}>
+            Finalizar
+          </button>
+        </div>
+      )}
+
+      {/* Navigator */}
       {navOpen && (
         <div className="anim-fade" style={{ position: "fixed", inset: 0, zIndex: 60 }}>
           <div style={{ position: "absolute", inset: 0, background: "rgba(2,6,23,0.6)", backdropFilter: "blur(4px)" }} onClick={() => setNavOpen(false)} />
-          <div className="glass-strong anim-slide-up" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 420, padding: "24px", overflowY: "auto" }}>
-            <div className="row between" style={{ marginBottom: 18 }}>
-              <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Navegador de Questões</h3>
-              <button className="btn btn-icon" onClick={() => setNavOpen(false)}><X size={14} /></button>
+          {isMobile ? (
+            <div className="glass-strong anim-sheet-up" style={{ position: "absolute", bottom: 0, left: 0, right: 0, borderRadius: "20px 20px 0 0", padding: "20px 20px 32px", maxHeight: "70vh", overflowY: "auto" }}>
+              <div className="row between" style={{ marginBottom: 16 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Navegador de Questões</h3>
+                <button className="btn btn-icon" onClick={() => setNavOpen(false)}><X size={14} /></button>
+              </div>
+              {navGrid}
             </div>
-            <div className="row" style={{ gap: 14, fontSize: 11.5, color: "var(--muted-foreground)", marginBottom: 16, flexWrap: "wrap" }}>
-              <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(16,185,129,0.25)", border: "1px solid rgba(16,185,129,0.5)" }} />Respondida</div>
-              <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(245,158,11,0.25)", border: "1px solid rgba(245,158,11,0.5)" }} />Marcada</div>
-              <div className="row" style={{ gap: 6 }}><span style={{ width: 10, height: 10, borderRadius: 4, background: "rgba(30,41,59,0.7)", border: "1px solid var(--border-strong)" }} />Pendente</div>
+          ) : (
+            <div className="glass-strong anim-slide-up" style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: 420, padding: "24px", overflowY: "auto" }}>
+              <div className="row between" style={{ marginBottom: 18 }}>
+                <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>Navegador de Questões</h3>
+                <button className="btn btn-icon" onClick={() => setNavOpen(false)}><X size={14} /></button>
+              </div>
+              {navGrid}
             </div>
-            <div className="grid-10q">
-              {questions.map((q, i) => {
-                const isAnswered = q.id in answers
-                const isMarked = marked.has(q.id)
-                const isCurrent = i === currentIndex
-                const bg = isCurrent ? "rgba(37,99,235,0.4)" : isAnswered ? "rgba(16,185,129,0.2)" : isMarked ? "rgba(245,158,11,0.2)" : "rgba(30,41,59,0.5)"
-                const brd = isCurrent ? "var(--primary)" : isAnswered ? "rgba(16,185,129,0.5)" : isMarked ? "rgba(245,158,11,0.5)" : "var(--border)"
-                return (
-                  <button key={q.id} onClick={() => { setCurrentIndex(i); setNavOpen(false) }} className="mono"
-                    style={{ aspectRatio: "1", borderRadius: 6, background: bg, border: `1px solid ${brd}`, color: "var(--foreground)", fontSize: 10.5, cursor: "pointer", fontFamily: "JetBrains Mono", fontWeight: 500 }}>
-                    {i + 1}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
+          )}
         </div>
       )}
 
